@@ -62,7 +62,6 @@
   .absent-btn.active { background:var(--absent-red); color:white; border-color:var(--absent-red); }
   .iam-hint { font-size:0.48rem; letter-spacing:0.1em; color:rgba(255,255,255,0.3); margin-left:auto; font-style:italic; }
 
-  /* WEEK TABS */
   /* WEEK NAVIGATOR */
   .week-nav {
     background: var(--peach);
@@ -155,7 +154,7 @@
   .absent-mode .day-col:not(.holiday):not(.absent-day):hover .day-header { background: rgba(224,80,80,0.15) !important; }
   .absent-mode .day-col:not(.holiday):not(.absent-day):hover .day-name::after { content: ' — KLIK FOR AT MELDE FRA'; font-size: 0.5rem; opacity: 0.6; letter-spacing: 0.05em; }
 
-  /* ABSENT MODE: show mark button in day headers (kept as visual hint) */
+  /* ABSENT MODE: show mark button in day headers */
   .absent-mode-btn { display:none; margin-top:0.35rem; font-size:0.4rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(224,80,80,0.8); cursor:pointer; border:1.5px solid rgba(224,80,80,0.45); border-radius:20px; padding:0.1rem 0.5rem; background:white; transition:all 0.15s; }
   .absent-mode .absent-mode-btn { display:inline-block; }
   .day-col.absent-day .absent-mode-btn { display:none !important; }
@@ -267,6 +266,7 @@
   @media (max-width:560px) { .day-grid { grid-template-columns:1fr 1fr; } .masthead { grid-template-columns:1fr; } .mt-today { border-left:none; border-top:4px solid var(--ink); flex-direction:row; gap:1rem; } }
   @media (max-width:340px) { .day-grid { grid-template-columns:1fr; } }
 </style>
+
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -284,7 +284,6 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // Expose db and helpers to main script via window
     window._db = db;
     window._fbDoc  = doc;
     window._fbSet  = setDoc;
@@ -293,7 +292,6 @@
     window._fbCol  = collection;
     window._fbReady = true;
 
-    // Notify main script that Firebase is ready
     window.dispatchEvent(new Event('firebaseReady'));
   </script>
 </head>
@@ -311,8 +309,8 @@
   </div>
   <div class="mt-today">
     <div class="today-label">↓ I DAG</div>
-    <div class="tday">ONSDAG</div>
-    <div class="tdate">25.2.2026</div>
+    <div class="tday" id="mastToday">—</div>
+    <div class="tdate" id="mastDate">—</div>
   </div>
 </div>
 
@@ -343,6 +341,7 @@
   </div>
   <button class="wnav-arrow" id="wnavNext">&#8594;</button>
 </div>
+
 <div id="schedules"></div>
 
 <div class="legend">
@@ -406,7 +405,6 @@
         <button class="btn-regret-opt" id="btnTakeBack">↩ TAG MIN VAGT TILBAGE</button>
         <button class="btn-regret-opt btn-regret-give" id="btnGiveToOther">⇄ GIV TIL EN ANDEN</button>
       </div>
-      <!-- Give-to-other sub-panel -->
       <div id="regretGivePanel" style="display:none;margin-top:0.8rem;">
         <div class="modal-step">VÆLG HVEM DER SKAL HAVE VAGTEN</div>
         <div class="swap-options" id="regretGiveOptions" style="margin-top:0.5rem;"></div>
@@ -422,120 +420,133 @@
 <script>
 (function(){
 
-/* ═══════════════════════════════════════════════════════════════════
-   SCHEDULE DATA — CORRECTED per rules:
-
-   RULE: Mie has 15:00-16:00 every MONDAY  ✓ (was already correct all weeks)
-   RULE: Mie has 15:00-16:00 every THURSDAY ✓ fixed below:
-         UGE 9  Thu: was Avi   → now Mie
-         UGE 10 Thu: was Tarja → now Mie
-         UGE 11 Thu: was Tarja → now Mie  (exception week: Mie also has Fri)
-         UGE 12 Thu: was Avi   → now Mie
-
-   EXCEPTION: UGE 11 is the one allowed week where Mie covers BOTH
-              Thu 15-16 AND Fri 15-16.
-
-   SIDE EFFECT: UGE 11 Wed 15-16 was Mie (wrong extra) → changed to Avi.
-
-   Fri 15-16 rotation: UGE9=Tarja · UGE10=Avi · UGE11=Mie · UGE12=Tarja
-═══════════════════════════════════════════════════════════════════ */
-
+/* ══════════════════════════════════════════════════════════════════
+   SCHEDULE DATA
+══════════════════════════════════════════════════════════════════ */
 var WEEKS = [{"wi":0,"wn":9,"vp":1,"label":"UGE 9","range":"23/2 – 27/2","days":[{"date":"23/2","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/2","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/2","name":"Onsdag","isToday":true,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"26/2","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/2","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":1,"wn":10,"vp":2,"label":"UGE 10","range":"2/3 – 6/3","days":[{"date":"2/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"3/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"4/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"5/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"6/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":2,"wn":11,"vp":3,"label":"UGE 11","range":"9/3 – 13/3","days":[{"date":"9/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"10/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"11/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"12/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"13/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":3,"wn":12,"vp":1,"label":"UGE 12","range":"16/3 – 20/3","days":[{"date":"16/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"17/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"18/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"19/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"20/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":4,"wn":13,"vp":2,"label":"UGE 13","range":"23/3 – 27/3","days":[{"date":"23/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"25/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"26/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":5,"wn":14,"vp":3,"label":"UGE 14","range":"30/3 – 3/4","days":[{"date":"30/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"31/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"1/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"2/4","name":"Torsdag","isToday":false,"isHoliday":true,"holName":"Skærtorsdag","holIcon":"✝️","slots":[]},{"date":"3/4","name":"Fredag","isToday":false,"isHoliday":true,"holName":"Langfredag","holIcon":"✝️","slots":[]}]},{"wi":6,"wn":15,"vp":1,"label":"UGE 15","range":"6/4 – 10/4","days":[{"date":"6/4","name":"Mandag","isToday":false,"isHoliday":true,"holName":"2. Påskedag","holIcon":"🐣","slots":[]},{"date":"7/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"8/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"9/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"10/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":7,"wn":16,"vp":2,"label":"UGE 16","range":"13/4 – 17/4","days":[{"date":"13/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"14/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"15/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"16/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"17/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":8,"wn":17,"vp":3,"label":"UGE 17","range":"20/4 – 24/4","days":[{"date":"20/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"21/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"22/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"23/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":9,"wn":18,"vp":1,"label":"UGE 18","range":"27/4 – 1/5","days":[{"date":"27/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"28/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"29/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"30/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"1/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":10,"wn":19,"vp":2,"label":"UGE 19","range":"4/5 – 8/5","days":[{"date":"4/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"5/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"6/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"7/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"8/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":11,"wn":20,"vp":3,"label":"UGE 20","range":"11/5 – 15/5","days":[{"date":"11/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"12/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"13/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"14/5","name":"Torsdag","isToday":false,"isHoliday":true,"holName":"Kristi Himmelfartsdag","holIcon":"⛪","slots":[]},{"date":"15/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":12,"wn":21,"vp":1,"label":"UGE 21","range":"18/5 – 22/5","days":[{"date":"18/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"19/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"20/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"21/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"22/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":13,"wn":22,"vp":2,"label":"UGE 22","range":"25/5 – 29/5","days":[{"date":"25/5","name":"Mandag","isToday":false,"isHoliday":true,"holName":"2. Pinsedag","holIcon":"🕊️","slots":[]},{"date":"26/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"27/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"28/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"29/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":14,"wn":23,"vp":3,"label":"UGE 23","range":"1/6 – 5/6","days":[{"date":"1/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"2/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"3/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"4/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"5/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":15,"wn":24,"vp":1,"label":"UGE 24","range":"8/6 – 12/6","days":[{"date":"8/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"9/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"10/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"11/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"12/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":16,"wn":25,"vp":2,"label":"UGE 25","range":"15/6 – 19/6","days":[{"date":"15/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"16/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"17/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"18/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"19/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":17,"wn":26,"vp":3,"label":"UGE 26","range":"22/6 – 26/6","days":[{"date":"22/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"23/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"24/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"26/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":18,"wn":27,"vp":1,"label":"UGE 27","range":"29/6 – 1/7","days":[{"date":"29/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"30/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"1/7","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]}];
 
-var AGENT_HL   = {Avi:'#D4F5C4',Tarja:'#E8D5FF',Mie:'#FFD5E8'};
+/* ══════════════════════════════════════════════════════════════════
+   CONSTANTS & STATE
+══════════════════════════════════════════════════════════════════ */
+var AGENT_HL   = {Avi:'#D4F5C4', Tarja:'#E8D5FF', Mie:'#FFD5E8'};
 var ALL_AGENTS = ['Avi','Tarja','Mie'];
-var activeWeek  = 0; // auto-set to current week
+
+// ── FIX 1: Auto-detect current week on init ──────────────────────
+function getCurrentWeekIndex() {
+  var today = new Date();
+  // Get ISO week number
+  var d = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  var dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  var isoWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+
+  // Find matching week in WEEKS
+  for (var i = 0; i < WEEKS.length; i++) {
+    if (WEEKS[i].wn === isoWeek) return i;
+  }
+  // If current week not in range, clamp to first week
+  return 0;
+}
+
+var activeWeek  = getCurrentWeekIndex(); // FIX 1 applied
 var activeAgent = '';
 var activeIam   = '';
 var absentMode  = false;
-var absentDays  = {}; // "wi-di" -> agentName
+var absentDays  = {};
+var swapHistory = {};
 var swapSlotEl=null, swapSlotData=null, swapTarget='';
+var regretData=null, regretGiveTarget='';
 
-// ── Build UI ─────────────────────────────────────────────────────────────────
+// Set today masthead dynamically
+(function(){
+  var days = ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+  var now  = new Date();
+  var d    = now.getDate(), m = now.getMonth()+1;
+  document.getElementById('mastToday').textContent = days[now.getDay()].toUpperCase();
+  document.getElementById('mastDate').textContent  = d+'.'+m+'.'+now.getFullYear();
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   BUILD UI
+══════════════════════════════════════════════════════════════════ */
 function buildUI(){
-  var schEl=document.getElementById('schedules');
-
+  var schEl = document.getElementById('schedules');
   WEEKS.forEach(function(week){
-    // Panel (no tabs anymore - using navigator)
-    var panel=document.createElement('div');
-    panel.className='schedule'+(week.wi===activeWeek?' visible':'');
-    panel.id='week-'+week.wi;
-    var grid=document.createElement('div'); grid.className='day-grid';
+    var panel = document.createElement('div');
+    panel.className = 'schedule' + (week.wi===activeWeek?' visible':'');
+    panel.id = 'week-'+week.wi;
+    var grid = document.createElement('div'); grid.className='day-grid';
 
-    week.days.forEach(function(day,di){
-      var col=document.createElement('div');
-      col.className='day-col'+(day.isToday?' today':'')+(day.isHoliday?' holiday':'');
-      col.dataset.wi=week.wi; col.dataset.di=di;
+    week.days.forEach(function(day, di){
+      var col = document.createElement('div');
+      col.className = 'day-col'+(day.isToday?' today':'')+(day.isHoliday?' holiday':'');
+      col.dataset.wi = week.wi; col.dataset.di = di;
 
-      // Click the entire column to toggle absent when in absent mode
-      col.addEventListener('click', function(e) {
-        if (!absentMode || !activeIam) return;
-        if (day.isHoliday) return;
-        // Don't trigger if clicking the undo button inside absent overlay
-        if (e.target.classList.contains('absent-undo')) return;
+      col.addEventListener('click', function(e){
+        if(!absentMode || !activeIam) return;
+        if(day.isHoliday) return;
+        if(e.target.classList.contains('absent-undo')) return;
         doAbsent(week.wi, di, col);
       });
 
       // Header
-      var hdr=document.createElement('div'); hdr.className='day-header';
-      var dn=document.createElement('div'); dn.className='day-name'; dn.textContent=day.name; hdr.appendChild(dn);
-      var dd=document.createElement('div'); dd.className='day-date'; dd.textContent=day.date; hdr.appendChild(dd);
-      if(day.isHoliday){var hn=document.createElement('div');hn.className='holiday-name';hn.textContent=day.holName;hdr.appendChild(hn);}
-      if(day.isToday){var tp=document.createElement('div');tp.className='today-pill';tp.textContent='▶ I DAG';hdr.appendChild(tp);}
+      var hdr = document.createElement('div'); hdr.className='day-header';
+      var dn  = document.createElement('div'); dn.className='day-name'; dn.textContent=day.name; hdr.appendChild(dn);
+      var dd  = document.createElement('div'); dd.className='day-date'; dd.textContent=day.date; hdr.appendChild(dd);
+      if(day.isHoliday){ var hn=document.createElement('div'); hn.className='holiday-name'; hn.textContent=day.holName; hdr.appendChild(hn); }
+      if(day.isToday)  { var tp=document.createElement('div'); tp.className='today-pill';   tp.textContent='▶ I DAG';   hdr.appendChild(tp); }
 
-      // Absent mark button (shows in absent mode)
-      var amBtn=document.createElement('button'); amBtn.className='absent-mode-btn'; amBtn.textContent='FRI HELE DAGEN';
-      amBtn.addEventListener('click',function(e){e.stopPropagation();doAbsent(week.wi,di,col);});
+      var amBtn = document.createElement('button'); amBtn.className='absent-mode-btn'; amBtn.textContent='FRI HELE DAGEN';
+      amBtn.addEventListener('click', function(e){ e.stopPropagation(); doAbsent(week.wi,di,col); });
       hdr.appendChild(amBtn);
       col.appendChild(hdr);
 
       // Absent overlay
-      var ovl=document.createElement('div'); ovl.className='absent-overlay';
-      var oIco=document.createElement('div'); oIco.className='absent-icon'; oIco.textContent='🚫'; ovl.appendChild(oIco);
-      var oTxt=document.createElement('div'); oTxt.className='absent-text'; oTxt.textContent='FRAVÆRENDE'; ovl.appendChild(oTxt);
-      var oWho=document.createElement('div'); oWho.className='absent-who'; oWho.id='abswho-'+week.wi+'-'+di; ovl.appendChild(oWho);
-      var oUndo=document.createElement('button'); oUndo.className='absent-undo'; oUndo.textContent='↩ FORTRYD';
-      oUndo.addEventListener('click',function(){doAbsent(week.wi,di,col);});
+      var ovl  = document.createElement('div'); ovl.className='absent-overlay';
+      var oIco = document.createElement('div'); oIco.className='absent-icon'; oIco.textContent='🚫'; ovl.appendChild(oIco);
+      var oTxt = document.createElement('div'); oTxt.className='absent-text'; oTxt.textContent='FRAVÆRENDE'; ovl.appendChild(oTxt);
+      var oWho = document.createElement('div'); oWho.className='absent-who'; oWho.id='abswho-'+week.wi+'-'+di; ovl.appendChild(oWho);
+      var oUndo= document.createElement('button'); oUndo.className='absent-undo'; oUndo.textContent='↩ FORTRYD';
+      oUndo.addEventListener('click', function(){ doAbsent(week.wi,di,col); });
       ovl.appendChild(oUndo);
       col.appendChild(ovl);
 
       if(day.isHoliday){
-        var hb=document.createElement('div'); hb.className='holiday-body';
-        var hico=document.createElement('div'); hico.className='holiday-icon'; hico.textContent=day.holIcon; hb.appendChild(hico);
-        var hoff=document.createElement('div'); hoff.className='holiday-off'; hoff.textContent='FRI DAG'; hb.appendChild(hoff);
-        var hsub=document.createElement('div'); hsub.className='holiday-sub'; hsub.textContent=day.holName; hb.appendChild(hsub);
+        var hb   = document.createElement('div'); hb.className='holiday-body';
+        var hico = document.createElement('div'); hico.textContent=day.holIcon; hb.appendChild(hico);
+        var hoff = document.createElement('div'); hoff.className='holiday-off'; hoff.textContent='FRI DAG'; hb.appendChild(hoff);
+        var hsub = document.createElement('div'); hsub.className='holiday-sub'; hsub.textContent=day.holName; hb.appendChild(hsub);
         col.appendChild(hb);
       } else {
-        day.slots.forEach(function(slot,si){
-          var div=document.createElement('div');
-          var tEl=document.createElement('div'); tEl.className='slot-time'; tEl.textContent=slot.time;
+        day.slots.forEach(function(slot, si){
+          var div = document.createElement('div');
+          var tEl = document.createElement('div'); tEl.className='slot-time'; tEl.textContent=slot.time;
           if(slot.isBreak){
-            div.className='slot break-slot';
-            var bl=document.createElement('div'); bl.className='break-label'; bl.textContent=slot.label;
+            div.className = 'slot break-slot';
+            var bl = document.createElement('div'); bl.className='break-label'; bl.textContent=slot.label;
             div.appendChild(tEl); div.appendChild(bl);
           } else {
-            div.className='slot '+slot.agents.map(function(a){return 'has-'+a;}).join(' ');
-            div.dataset.agents=slot.agents.join(',');
-            div.dataset.wi=week.wi; div.dataset.di=di; div.dataset.si=si;
-            var aEl=document.createElement('div'); aEl.className='slot-agents';
+            div.className = 'slot '+slot.agents.map(function(a){return 'has-'+a;}).join(' ');
+            div.dataset.agents = slot.agents.join(',');
+            div.dataset.wi = week.wi; div.dataset.di = di; div.dataset.si = si;
+            var aEl = document.createElement('div'); aEl.className='slot-agents';
             slot.agents.forEach(function(a){
-              var tag=document.createElement('span'); tag.className='agent-tag '+a; tag.textContent=a.toUpperCase(); aEl.appendChild(tag);
+              var tag = document.createElement('span'); tag.className='agent-tag '+a; tag.textContent=a.toUpperCase(); aEl.appendChild(tag);
             });
             div.appendChild(tEl); div.appendChild(aEl);
-            div.addEventListener('click',function(){
-              if(!activeIam||absentMode) return;
+            div.addEventListener('click', function(){
+              if(!activeIam || absentMode) return;
               if(absentDays[week.wi+'-'+di]) return;
-              var ags=(this.dataset.agents||'').split(',').filter(Boolean);
-              var slotKey='swap_'+week.wi+'_'+di+'_'+si;
-              var hist=swapHistory[slotKey];
-              // If agent was originally on this slot but got swapped away → offer regret
+              var ags = (this.dataset.agents||'').split(',').filter(Boolean);
+              var slotKey = 'swap_'+week.wi+'_'+di+'_'+si;
+              var hist = swapHistory[slotKey];
               if(ags.indexOf(activeIam)===-1){
                 if(hist && hist.originalAgents && hist.originalAgents.indexOf(activeIam)>-1){
                   openRegret(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags,slotKey:slotKey,hist:hist});
                 }
                 return;
               }
-              // Normal swap — but also show regret option if this slot was previously swapped
               openSwap(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags,slotKey:slotKey,hist:hist});
             });
           }
@@ -549,137 +560,185 @@ function buildUI(){
   });
 }
 
-// ── Absent ───────────────────────────────────────────────────────────────────
-function doAbsent(wi,di,col){
-  var key=wi+'-'+di;
+/* ══════════════════════════════════════════════════════════════════
+   ABSENT
+══════════════════════════════════════════════════════════════════ */
+function doAbsent(wi, di, col){
+  var key = wi+'-'+di;
   if(absentDays[key]){
     delete absentDays[key];
     col.classList.remove('absent-day');
-    var w=document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent='';
-    toast('Fraværsmarkering fjernet',false);
-    fbSaveAbsent(wi,di,null);
+    var w = document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent='';
+    toast('Fraværsmarkering fjernet', false);
+    fbSaveAbsent(wi, di, null);
   } else {
-    absentDays[key]=activeIam;
+    absentDays[key] = activeIam;
     col.classList.add('absent-day');
-    var w=document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent=activeIam.toUpperCase()+' — FRAVÆRENDE';
-    toast(activeIam+' markeret fraværende',true);
-    fbSaveAbsent(wi,di,activeIam);
+    var w = document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent=activeIam.toUpperCase()+' — FRAVÆRENDE';
+    toast(activeIam+' markeret fraværende', true);
+    fbSaveAbsent(wi, di, activeIam);
   }
 }
 
-function fbSaveAbsent(wi,di,agent){
+function fbSaveAbsent(wi, di, agent){
   if(!window._fbReady) return;
   var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
   var key = 'absent_'+wi+'_'+di;
+  // ── FIX 4: Use null explicitly so Firestore stores it for deletion events ──
   var val = agent ? { wi:wi, di:di, agent:agent, ts:Date.now() } : null;
-  fset(fdoc(db,'vagtplan','changes'), { [key]: val }, {merge:true})
-    .catch(function(e){ console.error('Firebase absent error',e); });
+  var update = {};
+  update[key] = val;
+  fset(fdoc(db,'vagtplan','changes'), update, {merge:true})
+    .catch(function(e){ console.error('Firebase absent error', e); });
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════════════════ */
 function render(){
-  // Navigator updated via updateNav()
-  document.querySelectorAll('.schedule').forEach(function(p,i){
-    p.classList.toggle('visible',i===activeWeek);
+  document.querySelectorAll('.schedule').forEach(function(p, i){
+    p.classList.toggle('visible', i===activeWeek);
   });
 
-  var panel=document.getElementById('week-'+activeWeek);
+  var panel = document.getElementById('week-'+activeWeek);
   if(!panel) return;
 
-  // Absent mode class on grid
-  var grid=panel.querySelector('.day-grid');
-  if(grid) grid.classList.toggle('absent-mode',absentMode&&!!activeIam);
+  var grid = panel.querySelector('.day-grid');
+  if(grid) grid.classList.toggle('absent-mode', absentMode && !!activeIam);
 
   panel.querySelectorAll('.slot:not(.break-slot)').forEach(function(slot){
-    var ags=(slot.dataset.agents||'').split(',').filter(Boolean);
-    slot.classList.remove('highlighted','dimmed','swappable');
+    var ags = (slot.dataset.agents||'').split(',').filter(Boolean);
+    slot.classList.remove('highlighted','dimmed','swappable','regret-changed');
     slot.style.removeProperty('--hl-bg');
-    slot.querySelectorAll('.agent-tag').forEach(function(t){t.classList.remove('hl-agent');});
+    slot.querySelectorAll('.agent-tag').forEach(function(t){ t.classList.remove('hl-agent'); });
 
     if(activeAgent){
       if(ags.indexOf(activeAgent)>-1){
         slot.classList.add('highlighted');
-        slot.style.setProperty('--hl-bg',AGENT_HL[activeAgent]||'#C8E8A0');
-        slot.querySelectorAll('.agent-tag.'+activeAgent).forEach(function(t){t.classList.add('hl-agent');});
+        slot.style.setProperty('--hl-bg', AGENT_HL[activeAgent]||'#C8E8A0');
+        slot.querySelectorAll('.agent-tag.'+activeAgent).forEach(function(t){ t.classList.add('hl-agent'); });
       } else {
         slot.classList.add('dimmed');
       }
     }
-    if(activeIam&&!absentMode&&ags.indexOf(activeIam)>-1){
+    if(activeIam && !absentMode && ags.indexOf(activeIam)>-1){
       slot.classList.add('swappable');
     }
-    // Show regret indicator: agent was swapped off this slot
-    slot.classList.remove('regret-changed');
-    var sKey='swap_'+slot.dataset.wi+'_'+slot.dataset.di+'_'+slot.dataset.si;
-    if(activeIam&&!absentMode&&swapHistory[sKey]){
-      var sh=swapHistory[sKey];
-      if(sh.originalAgents&&sh.originalAgents.indexOf(activeIam)>-1&&ags.indexOf(activeIam)===-1){
+    var sKey = 'swap_'+slot.dataset.wi+'_'+slot.dataset.di+'_'+slot.dataset.si;
+    if(activeIam && !absentMode && swapHistory[sKey]){
+      var sh = swapHistory[sKey];
+      if(sh.originalAgents && sh.originalAgents.indexOf(activeIam)>-1 && ags.indexOf(activeIam)===-1){
         slot.classList.add('regret-changed');
       }
     }
   });
 }
 
-// ── Absent toggle button ─────────────────────────────────────────────────────
-var absentToggle=document.getElementById('absentToggle');
-absentToggle.addEventListener('click',function(){
+/* ══════════════════════════════════════════════════════════════════
+   WEEK NAVIGATOR
+══════════════════════════════════════════════════════════════════ */
+var wnMap = {};
+WEEKS.forEach(function(w){ wnMap[w.wn] = w.wi; });
+
+function updateNav(){
+  var week  = WEEKS[activeWeek];
+  var input = document.getElementById('wnavInput');
+  var range = document.getElementById('wnavRange');
+  var prev  = document.getElementById('wnavPrev');
+  var next  = document.getElementById('wnavNext');
+  if(input) input.value  = week.wn;
+  if(range) range.textContent = week.range;
+  if(prev)  prev.disabled = (activeWeek<=0);
+  if(next)  next.disabled = (activeWeek>=WEEKS.length-1);
+}
+
+document.getElementById('wnavPrev').addEventListener('click', function(){
+  if(activeWeek>0){ activeWeek--; render(); updateNav(); }
+});
+document.getElementById('wnavNext').addEventListener('click', function(){
+  if(activeWeek<WEEKS.length-1){ activeWeek++; render(); updateNav(); }
+});
+document.getElementById('wnavInput').addEventListener('change', function(){
+  var wn = parseInt(this.value);
+  if(wnMap[wn]!==undefined){
+    activeWeek=wnMap[wn]; render(); updateNav();
+  } else {
+    var keys=Object.keys(wnMap).map(Number).sort(function(a,b){return a-b;});
+    var clamped = wn<keys[0]?keys[0]:keys[keys.length-1];
+    activeWeek=wnMap[clamped]; render(); updateNav();
+  }
+});
+document.getElementById('wnavInput').addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp')  { e.preventDefault(); if(activeWeek<WEEKS.length-1){activeWeek++;render();updateNav();} }
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(activeWeek>0){activeWeek--;render();updateNav();} }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   ABSENT TOGGLE BUTTON
+══════════════════════════════════════════════════════════════════ */
+var absentToggle = document.getElementById('absentToggle');
+absentToggle.addEventListener('click', function(){
   if(!activeIam) return;
-  absentMode=!absentMode;
-  absentToggle.classList.toggle('active',absentMode);
-  absentToggle.textContent=absentMode?'✕ ANNULLER FRAVÆRSMARKERING':'KLIK FOR AT MARKERE FRI I HELE DAGEN';
-  var hint=document.getElementById('iamHint');
-  if(hint) hint.textContent=absentMode?'Klik på en dag i kalenderen for at markere fraværsdag':'Vælg din rolle for at bytte vagter eller melde fra';
+  absentMode = !absentMode;
+  absentToggle.classList.toggle('active', absentMode);
+  absentToggle.textContent = absentMode ? '✕ ANNULLER FRAVÆRSMARKERING' : 'KLIK FOR AT MARKERE FRI I HELE DAGEN';
+  var hint = document.getElementById('iamHint');
+  if(hint) hint.textContent = absentMode ? 'Klik på en dag i kalenderen for at markere fraværsdag' : 'Vælg din rolle for at bytte vagter eller melde fra';
   render();
 });
 
-// ── Filter buttons ───────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   FILTER BUTTONS
+══════════════════════════════════════════════════════════════════ */
 document.querySelectorAll('.abtn').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    activeAgent=btn.getAttribute('data-agent');
-    document.querySelectorAll('.abtn').forEach(function(b){b.classList.remove('active');});
+  btn.addEventListener('click', function(){
+    activeAgent = btn.getAttribute('data-agent');
+    document.querySelectorAll('.abtn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     render();
   });
 });
 
-// ── IAM buttons ──────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   IAM BUTTONS
+══════════════════════════════════════════════════════════════════ */
 document.querySelectorAll('.iam-btn').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var val=btn.getAttribute('data-iam');
+  btn.addEventListener('click', function(){
+    var val = btn.getAttribute('data-iam');
     if(activeIam===val){
       activeIam=''; absentMode=false;
-      document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('.iam-btn').forEach(function(b){ b.classList.remove('active'); });
       absentToggle.classList.remove('visible','active');
       absentToggle.textContent='KLIK FOR AT MARKERE FRI I HELE DAGEN';
-      var hint=document.getElementById('iamHint');
-      if(hint) hint.textContent='Vælg din rolle for at bytte vagter eller melde fra';
+      var hint=document.getElementById('iamHint'); if(hint) hint.textContent='Vælg din rolle for at bytte vagter eller melde fra';
     } else {
       activeIam=val; absentMode=false;
-      document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('.iam-btn').forEach(function(b){ b.classList.remove('active'); });
       btn.classList.add('active');
       absentToggle.classList.add('visible');
       absentToggle.classList.remove('active');
       absentToggle.textContent='KLIK FOR AT MARKERE FRI I HELE DAGEN';
-      var hint=document.getElementById('iamHint');
-      if(hint) hint.textContent='Klik en vagt for at bytte · Klik "Marker dag som fri" for at melde fra';
+      var hint=document.getElementById('iamHint'); if(hint) hint.textContent='Klik en vagt for at bytte · Klik "Marker dag som fri" for at melde fra';
     }
     render();
   });
 });
 
-// ── Swap modal ───────────────────────────────────────────────────────────────
-function openSwap(slotEl,data){
+/* ══════════════════════════════════════════════════════════════════
+   SWAP MODAL
+══════════════════════════════════════════════════════════════════ */
+function openSwap(slotEl, data){
   swapSlotEl=slotEl; swapSlotData=data; swapTarget='';
   document.getElementById('swapSlotTime').textContent=data.time;
   document.getElementById('swapSlotDay').textContent='Din vagt · '+data.dayName;
   var opts=document.getElementById('swapOptions'); opts.innerHTML='';
-  ALL_AGENTS.filter(function(a){return a!==activeIam;}).forEach(function(agent){
+  ALL_AGENTS.filter(function(a){ return a!==activeIam; }).forEach(function(agent){
     var btn=document.createElement('button'); btn.className='swap-agent-btn'; btn.dataset.swap=agent;
     var inShift=data.agents.indexOf(agent)>-1;
     btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(inShift?'også på denne vagt':'ledig til bytte')+'</div>';
-    btn.addEventListener('click',function(){
+    btn.addEventListener('click', function(){
       swapTarget=agent;
-      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){b.classList.remove('selected');});
+      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){ b.classList.remove('selected'); });
       btn.classList.add('selected');
       var acc=document.getElementById('btnAccept');
       acc.classList.add('ready'); acc.textContent='GIV TIL '+agent.toUpperCase()+' ✓';
@@ -690,135 +749,94 @@ function openSwap(slotEl,data){
   acc.classList.remove('ready'); acc.textContent='ACCEPTER BYTTE ✓';
   document.getElementById('swapModal').classList.add('open');
 }
+
 function closeModal(){
   document.getElementById('swapModal').classList.remove('open');
   swapSlotEl=null; swapSlotData=null; swapTarget='';
 }
-function applySwap(wi, si, newAgents){
-  // Apply a swap visually given week index wi, slot element selector key, new agents array
-  var panel = document.getElementById('week-'+wi);
-  if(!panel) return;
-  var slots = panel.querySelectorAll('.slot:not(.break-slot)');
-  slots.forEach(function(slot){
-    if(slot.dataset.si === String(si.si) && slot.dataset.di === String(si.di) && slot.dataset.wi === String(wi)){
-      slot.dataset.agents = newAgents.join(',');
-      // rebuild classes
-      var allAgents = ['Avi','Tarja','Mie'];
-      allAgents.forEach(function(a){ slot.classList.remove('has-'+a); });
-      newAgents.forEach(function(a){ slot.classList.add('has-'+a); });
-      var aEl = slot.querySelector('.slot-agents');
-      if(aEl){ aEl.innerHTML=''; newAgents.forEach(function(a){ var t=document.createElement('span'); t.className='agent-tag '+a; t.textContent=a.toUpperCase(); aEl.appendChild(t); }); }
-    }
-  });
+
+// ── FIX 2: applySwap now also updates WEEKS data in-memory ──────
+function applySwap(wi, coords, newAgents){
+  // Update DOM
+  var panel=document.getElementById('week-'+wi);
+  if(panel){
+    panel.querySelectorAll('.slot:not(.break-slot)').forEach(function(slot){
+      if(parseInt(slot.dataset.si)===coords.si && parseInt(slot.dataset.di)===coords.di && parseInt(slot.dataset.wi)===wi){
+        slot.dataset.agents=newAgents.join(',');
+        var allAgents=['Avi','Tarja','Mie'];
+        allAgents.forEach(function(a){ slot.classList.remove('has-'+a); });
+        newAgents.forEach(function(a){ slot.classList.add('has-'+a); });
+        var aEl=slot.querySelector('.slot-agents');
+        if(aEl){
+          aEl.innerHTML='';
+          newAgents.forEach(function(a){ var t=document.createElement('span'); t.className='agent-tag '+a; t.textContent=a.toUpperCase(); aEl.appendChild(t); });
+        }
+      }
+    });
+  }
+  // Always update WEEKS data so highlights/filter work even on non-active weeks
+  updateWeeksSlot(wi, coords.di, coords.si, newAgents);
 }
 
 function acceptSwap(){
   if(!swapTarget||!swapSlotEl) return;
   var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
   var idx=ags.indexOf(activeIam); if(idx>-1) ags[idx]=swapTarget;
-  var wi  = parseInt(swapSlotEl.dataset.wi);
-  var di  = parseInt(swapSlotEl.dataset.di);
-  var si  = parseInt(swapSlotEl.dataset.si);
-
-  // Apply locally
+  var wi=parseInt(swapSlotEl.dataset.wi);
+  var di=parseInt(swapSlotEl.dataset.di);
+  var si=parseInt(swapSlotEl.dataset.si);
   applySwap(wi, {di:di,si:si}, ags);
   closeModal();
   toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time, false);
   render();
-
-  // Save to Firebase (pass original agents before swap)
   fbSaveSwap(wi, di, si, ags, swapSlotData.agents);
 }
 
 function fbSaveSwap(wi, di, si, agents, originalAgents){
   if(!window._fbReady) return;
   var db=window._db, fdoc=window._fbDoc, fset=window._fbSet, fget=window._fbGet;
-  var key = 'swap_'+wi+'_'+di+'_'+si;
-  var docRef = fdoc(db,'vagtplan','changes');
-  // Only store originalAgents if this is the first swap (don't overwrite original on re-swap)
+  var key='swap_'+wi+'_'+di+'_'+si;
+  var docRef=fdoc(db,'vagtplan','changes');
   fget(docRef).then(function(snap){
-    var existing = snap.exists() ? snap.data()[key] : null;
-    var orig = (existing && existing.originalAgents) ? existing.originalAgents : originalAgents;
-    fset(docRef, { [key]: { wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts: Date.now() } }, {merge:true})
-      .catch(function(e){ console.error('Firebase save error',e); });
+    var existing=snap.exists()?snap.data()[key]:null;
+    var orig=(existing&&existing.originalAgents)?existing.originalAgents:originalAgents;
+    var update={};
+    update[key]={ wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts:Date.now() };
+    fset(docRef, update, {merge:true}).catch(function(e){ console.error('Firebase save error',e); });
   });
 }
-document.getElementById('modalClose').addEventListener('click',closeModal);
-document.getElementById('btnCancel').addEventListener('click',closeModal);
-document.getElementById('btnAccept').addEventListener('click',acceptSwap);
-document.getElementById('swapModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-// ── Toast ────────────────────────────────────────────────────────────────────
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('btnAccept').addEventListener('click', acceptSwap);
+document.getElementById('swapModal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+/* ══════════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════════ */
 var toastTimer;
-function toast(msg,red){
+function toast(msg, red){
   var t=document.getElementById('toast');
   t.textContent=msg; t.className='toast'+(red?' red':'')+' show';
-  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},3500);
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove('show'); }, 3500);
 }
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-// ── Week Navigator ───────────────────────────────────────────────────────────
-var wnMap = {}; // iso_week → wi
-WEEKS.forEach(function(w){ wnMap[w.wn] = w.wi; });
-
-function updateNav(){
-  var week = WEEKS[activeWeek];
-  var input = document.getElementById('wnavInput');
-  var range  = document.getElementById('wnavRange');
-  var prev   = document.getElementById('wnavPrev');
-  var next   = document.getElementById('wnavNext');
-  if(input) input.value = week.wn;
-  if(range) range.textContent = week.range;
-  if(prev)  prev.disabled = (activeWeek <= 0);
-  if(next)  next.disabled = (activeWeek >= WEEKS.length - 1);
-}
-
-document.getElementById('wnavPrev').addEventListener('click', function(){
-  if(activeWeek > 0){ activeWeek--; render(); updateNav(); }
-});
-document.getElementById('wnavNext').addEventListener('click', function(){
-  if(activeWeek < WEEKS.length-1){ activeWeek++; render(); updateNav(); }
-});
-document.getElementById('wnavInput').addEventListener('change', function(){
-  var wn = parseInt(this.value);
-  if(wnMap[wn] !== undefined){
-    activeWeek = wnMap[wn]; render(); updateNav();
-  } else {
-    // clamp to nearest valid
-    var keys = Object.keys(wnMap).map(Number).sort(function(a,b){return a-b;});
-    var clamped = wn < keys[0] ? keys[0] : keys[keys.length-1];
-    activeWeek = wnMap[clamped]; render(); updateNav();
-  }
-});
-document.getElementById('wnavInput').addEventListener('keydown', function(e){
-  if(e.key==='ArrowUp'){ e.preventDefault(); if(activeWeek<WEEKS.length-1){activeWeek++;render();updateNav();} }
-  if(e.key==='ArrowDown'){ e.preventDefault(); if(activeWeek>0){activeWeek--;render();updateNav();} }
-});
-
-// ── Regret / Fortryd ─────────────────────────────────────────────────────────
-var regretData = null; // {slotEl, time, dayName, slotKey, hist, currentAgents}
-var regretGiveTarget = '';
-
+/* ══════════════════════════════════════════════════════════════════
+   REGRET / FORTRYD
+══════════════════════════════════════════════════════════════════ */
 function makeAgentTag(name){
-  var t=document.createElement('span');
-  t.className='agent-tag '+name;
-  t.textContent=name.toUpperCase();
-  return t;
+  var t=document.createElement('span'); t.className='agent-tag '+name; t.textContent=name.toUpperCase(); return t;
 }
 
 function openRegret(slotEl, data){
-  regretData = data; regretGiveTarget = '';
-  document.getElementById('regretSlotTime').textContent = data.time;
-  document.getElementById('regretSlotDay').textContent  = data.dayName;
-
-  // Show original vs current agents
-  var origEl = document.getElementById('regretOrigAgents');
-  var currEl = document.getElementById('regretCurrAgents');
+  regretData=data; regretGiveTarget='';
+  document.getElementById('regretSlotTime').textContent=data.time;
+  document.getElementById('regretSlotDay').textContent=data.dayName;
+  var origEl=document.getElementById('regretOrigAgents');
+  var currEl=document.getElementById('regretCurrAgents');
   origEl.innerHTML=''; currEl.innerHTML='';
   (data.hist.originalAgents||[]).forEach(function(a){ origEl.appendChild(makeAgentTag(a)); });
   data.agents.forEach(function(a){ currEl.appendChild(makeAgentTag(a)); });
-
-  // Reset give panel
   document.getElementById('regretGivePanel').style.display='none';
   document.getElementById('btnRegretConfirmGive').classList.remove('ready');
   document.getElementById('regretModal').classList.add('open');
@@ -829,49 +847,34 @@ function closeRegret(){
   regretData=null; regretGiveTarget='';
 }
 
-// Take back: restore the original agents for this agent's spot
 document.getElementById('btnTakeBack').addEventListener('click', function(){
   if(!regretData) return;
-  var hist = regretData.hist;
-  var curr = regretData.agents.slice(); // current agents on slot
-
-  // Figure out: in the original, activeIam was there. In current they're not.
-  // We swap in activeIam in place of whoever took their spot.
-  // Strategy: restore the full original agents list
-  var newAgents = hist.originalAgents.slice();
-
+  var hist=regretData.hist;
+  var newAgents=hist.originalAgents.slice();
   var wi=hist.wi, di=hist.di, si=hist.si;
   applySwap(wi, {di:di,si:si}, newAgents);
-  // Update WEEKS data
-  updateWeeksSlot(wi,di,si,newAgents);
   closeRegret(); closeModal();
   toast('Vagt gendannet til original ✓', false);
   fbSaveSwap(wi, di, si, newAgents, hist.originalAgents);
-  // If newAgents === originalAgents, we can clear the swap record from history
   if(JSON.stringify(newAgents.slice().sort())===JSON.stringify(hist.originalAgents.slice().sort())){
     delete swapHistory['swap_'+wi+'_'+di+'_'+si];
   }
   render();
 });
 
-// Give to other: show agent picker
 document.getElementById('btnGiveToOther').addEventListener('click', function(){
   if(!regretData) return;
-  var panel = document.getElementById('regretGivePanel');
-  panel.style.display = 'block';
-  var opts = document.getElementById('regretGiveOptions');
-  opts.innerHTML='';
+  var panel=document.getElementById('regretGivePanel'); panel.style.display='block';
+  var opts=document.getElementById('regretGiveOptions'); opts.innerHTML='';
   regretGiveTarget='';
   document.getElementById('btnRegretConfirmGive').classList.remove('ready');
-
-  // Show all agents except activeIam and those already on the slot
   ALL_AGENTS.filter(function(a){ return a!==activeIam; }).forEach(function(agent){
     var btn=document.createElement('button'); btn.className='swap-agent-btn'; btn.dataset.swap=agent;
     var onSlot=regretData.agents.indexOf(agent)>-1;
     btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(onSlot?'allerede på vagten':'ledig')+'</div>';
-    btn.addEventListener('click',function(){
+    btn.addEventListener('click', function(){
       regretGiveTarget=agent;
-      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){b.classList.remove('selected');});
+      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){ b.classList.remove('selected'); });
       btn.classList.add('selected');
       var conf=document.getElementById('btnRegretConfirmGive');
       conf.classList.add('ready'); conf.textContent='GIV TIL '+agent.toUpperCase()+' ✓';
@@ -880,16 +883,11 @@ document.getElementById('btnGiveToOther').addEventListener('click', function(){
   });
 });
 
-// Confirm give-to-other
 document.getElementById('btnRegretConfirmGive').addEventListener('click', function(){
   if(!regretData||!regretGiveTarget) return;
   var hist=regretData.hist;
   var curr=regretData.agents.slice();
-
-  // Replace whoever replaced activeIam with regretGiveTarget
-  // Find who is on the slot that wasn't originally there (the person who took activeIam's spot)
   var newAgents=curr.slice();
-  // Find the "intruder" — someone on current slot not on original, or just use first non-original
   var intruder=null;
   for(var i=0;i<curr.length;i++){
     if((hist.originalAgents||[]).indexOf(curr[i])===-1){ intruder=curr[i]; break; }
@@ -898,14 +896,10 @@ document.getElementById('btnRegretConfirmGive').addEventListener('click', functi
     var idx2=newAgents.indexOf(intruder);
     if(idx2>-1) newAgents[idx2]=regretGiveTarget;
   } else {
-    // Slot unchanged in structure — just add regretGiveTarget where activeIam was
-    // (shouldn't normally happen but be safe)
     newAgents.push(regretGiveTarget);
   }
-
   var wi=hist.wi, di=hist.di, si=hist.si;
-  applySwap(wi,{di:di,si:si},newAgents);
-  updateWeeksSlot(wi,di,si,newAgents);
+  applySwap(wi, {di:di,si:si}, newAgents);
   closeRegret(); closeModal();
   toast('Vagt givet til '+regretGiveTarget+' ✓', false);
   fbSaveSwap(wi,di,si,newAgents,hist.originalAgents);
@@ -916,49 +910,65 @@ document.getElementById('regretClose').addEventListener('click', closeRegret);
 document.getElementById('btnRegretCancel').addEventListener('click', closeRegret);
 document.getElementById('regretModal').addEventListener('click', function(e){ if(e.target===this) closeRegret(); });
 
-function updateWeeksSlot(wi,di,si,agents){
-  if(WEEKS[wi]&&WEEKS[wi].days[di]){
-    var slots=WEEKS[wi].days[di].slots;
-    var count=0;
-    for(var i=0;i<slots.length;i++){
-      if(!slots[i].isBreak){ if(count===si){slots[i].agents=agents;break;} count++; }
+/* ══════════════════════════════════════════════════════════════════
+   UPDATE WEEKS SLOT — FIX 3: correct counter increment placement
+══════════════════════════════════════════════════════════════════ */
+function updateWeeksSlot(wi, di, si, agents){
+  if(!WEEKS[wi] || !WEEKS[wi].days[di]) return;
+  var slots = WEEKS[wi].days[di].slots;
+  var count = 0;
+  for(var i = 0; i < slots.length; i++){
+    if(!slots[i].isBreak){
+      if(count === si){
+        slots[i].agents = agents; // ← update here
+        return;
+      }
+      count++; // ← FIX 3: increment AFTER the match check, not inside it
     }
   }
 }
 
-// ── Firebase sync ─────────────────────────────────────────────────────────────
-var swapHistory = {}; // key -> {wi,di,si,originalAgents,currentAgents}
-
+/* ══════════════════════════════════════════════════════════════════
+   FIREBASE SYNC
+══════════════════════════════════════════════════════════════════ */
 function applyAllChanges(data){
   if(!data) return;
   Object.keys(data).forEach(function(key){
     var val = data[key];
-    if(!val) return; // null = deleted
 
     if(key.indexOf('swap_')===0){
-      // Track history
-      swapHistory[key] = { wi:val.wi, di:val.di, si:val.si, originalAgents:val.originalAgents||val.agents, currentAgents:val.agents };
-      // Apply swap
+      if(!val) return; // swap deletions uncommon, skip
+      swapHistory[key] = {
+        wi: val.wi, di: val.di, si: val.si,
+        originalAgents: val.originalAgents || val.agents,
+        currentAgents:  val.agents
+      };
       applySwap(val.wi, {di:val.di, si:val.si}, val.agents);
-      // Also update the WEEKS data so filter/highlight works correctly
-      if(WEEKS[val.wi] && WEEKS[val.wi].days[val.di]){
-        var slots = WEEKS[val.wi].days[val.di].slots;
-        var realSi = 0; var count = 0;
-        for(var i=0;i<slots.length;i++){
-          if(!slots[i].isBreak){ if(count===val.si){realSi=i;break;} count++; }
-        }
-        slots[realSi].agents = val.agents;
-      }
     }
 
     if(key.indexOf('absent_')===0){
-      // Apply absent day
-      var col = document.querySelector('.day-col[data-wi="'+val.wi+'"][data-di="'+val.di+'"]');
-      if(col){
+      // ── FIX 4: handle null values to REMOVE absence markers ──
+      if(!val){
+        // val is null → remove absence
+        var parts = key.split('_'); // ['absent', wi, di]
+        var rwi = parseInt(parts[1]);
+        var rdi = parseInt(parts[2]);
+        var rkey = rwi+'-'+rdi;
+        delete absentDays[rkey];
+        var rcol = document.querySelector('.day-col[data-wi="'+rwi+'"][data-di="'+rdi+'"]');
+        if(rcol){
+          rcol.classList.remove('absent-day');
+          var rw = document.getElementById('abswho-'+rwi+'-'+rdi);
+          if(rw) rw.textContent='';
+        }
+      } else {
         absentDays[val.wi+'-'+val.di] = val.agent;
-        col.classList.add('absent-day');
-        var w = document.getElementById('abswho-'+val.wi+'-'+val.di);
-        if(w) w.textContent = val.agent.toUpperCase()+' — FRAVÆRENDE';
+        var col = document.querySelector('.day-col[data-wi="'+val.wi+'"][data-di="'+val.di+'"]');
+        if(col){
+          col.classList.add('absent-day');
+          var w = document.getElementById('abswho-'+val.wi+'-'+val.di);
+          if(w) w.textContent=val.agent.toUpperCase()+' — FRAVÆRENDE';
+        }
       }
     }
   });
@@ -968,28 +978,32 @@ function applyAllChanges(data){
 function startFirebaseSync(){
   if(!window._fbReady){ window.addEventListener('firebaseReady', startFirebaseSync, {once:true}); return; }
   var db=window._db, fdoc=window._fbDoc, fsnap=window._fbSnap;
-  // Real-time listener — fires immediately with current data, then on every change
   fsnap(fdoc(db,'vagtplan','changes'), function(snapshot){
     if(snapshot.exists()){
       applyAllChanges(snapshot.data());
     }
-  }, function(err){ console.error('Firebase sync error', err); });
+    showSyncStatus(true);
+  }, function(err){
+    console.error('Firebase sync error', err);
+    showSyncStatus(false);
+  });
 }
 
-// Show sync status indicator
 function showSyncStatus(ok){
-  var el = document.getElementById('syncDot');
-  if(!el) return;
-  el.title = ok ? 'Forbundet til Firebase — ændringer synkroniseres live' : 'Ikke forbundet';
+  var el=document.getElementById('syncDot'); if(!el) return;
+  el.title   = ok ? 'Forbundet — ændringer synkroniseres live' : 'Ikke forbundet';
   el.style.background = ok ? '#4CAF50' : '#E05050';
 }
-window.addEventListener('firebaseReady', function(){ showSyncStatus(true); });
 
+/* ══════════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════════ */
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',function(){buildUI();render();updateNav();startFirebaseSync();});
+  document.addEventListener('DOMContentLoaded', function(){ buildUI(); render(); updateNav(); startFirebaseSync(); });
 } else {
-  buildUI();render();updateNav();startFirebaseSync();
+  buildUI(); render(); updateNav(); startFirebaseSync();
 }
+
 })();
 </script>
 </body>

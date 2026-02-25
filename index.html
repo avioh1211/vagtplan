@@ -556,7 +556,7 @@ function buildUI(){
       if(day.isToday){var tp=document.createElement('div');tp.className='today-pill';tp.textContent='▶ I DAG';hdr.appendChild(tp);}
 
       // Absent mark button (shows in absent mode)
-      var amBtn=document.createElement('button'); amBtn.className='absent-mode-btn'; amBtn.textContent='✕ MELD FRA';
+      var amBtn=document.createElement('button'); amBtn.className='absent-mode-btn'; amBtn.textContent='FRI HELE DAGEN';
       amBtn.addEventListener('click',function(e){e.stopPropagation();doAbsent(week.wi,di,col);});
       hdr.appendChild(amBtn);
       col.appendChild(hdr);
@@ -721,8 +721,7 @@ function openSwap(slotEl,data){
   ALL_AGENTS.filter(function(a){return a!==activeIam;}).forEach(function(agent){
     var btn=document.createElement('button'); btn.className='swap-agent-btn'; btn.dataset.swap=agent;
     var inShift=data.agents.indexOf(agent)>-1;
-    btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(inShift?'allerede på vagt':'ledig til bytte')+'</div>';
-    if(inShift){btn.disabled=true;btn.style.opacity='0.35';}
+    btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(inShift?'også på denne vagt':'ledig til bytte')+'</div>';
     btn.addEventListener('click',function(){
       swapTarget=agent;
       opts.querySelectorAll('.swap-agent-btn').forEach(function(b){b.classList.remove('selected');});

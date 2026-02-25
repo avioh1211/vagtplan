@@ -58,7 +58,7 @@
         .slot-time { font-size: 0.7rem; font-weight: bold; opacity: 0.5; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
         .agent-tag { font-family: var(--display); font-size: 1rem; padding: 2px 8px; border: 2px solid currentColor; border-radius: 3px; margin-right: 4px; display: inline-block; margin-bottom: 2px; }
         .agent-tag.Avi { color: #2A7A2A; } .agent-tag.Tarja { color: #5533AA; } .agent-tag.Mie { color: #BB2277; }
-        .agent-tag.is-absent { opacity: 0.4; text-decoration: line-through; border-style: dashed; }
+        .agent-tag.is-absent { opacity: 0.6; text-decoration: line-through; border-style: dashed; font-size: 0.85rem; }
         
         .changed-badge { background: var(--changed-orange); color: white; font-family: var(--display); font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; opacity: 1 !important; }
 
@@ -155,7 +155,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- FULL OPDATERET DATA (4 Uger) ---
     const WEEKS = [
       {
         "wi": 0, "wn": 9, "range": "23/2 – 27/2",
@@ -237,7 +236,7 @@
             
             // Undo banner if the logged in agent IS absent today
             if (iamAgent && absentAgents.includes(iamAgent)) {
-                html += `<div style="background:var(--absent-red); color:white; font-family:var(--display); font-size:0.8rem; text-align:center; padding:5px; cursor:pointer;" onclick="window.toggleAbsent(${di}, true)">JEG ER FRI - FORTRYD</div>`;
+                html += `<div style="background:var(--absent-red); color:white; font-family:var(--display); font-size:0.8rem; text-align:center; padding:5px; cursor:pointer;" onclick="window.toggleAbsent(${di}, true)">IKKE TIL STEDE - FORTRYD</div>`;
             }
 
             day.slots.forEach((slot, si) => {
@@ -269,7 +268,7 @@
                     </div>
                     <div>${currentAgents.map(a => {
                         const isThisAgentAbsent = absentAgents.includes(a);
-                        return `<span class="agent-tag ${a} ${isThisAgentAbsent ? 'is-absent' : ''}">${isThisAgentAbsent ? `${a}-fri` : a}</span>`;
+                        return `<span class="agent-tag ${a} ${isThisAgentAbsent ? 'is-absent' : ''}">${isThisAgentAbsent ? `${a}-ikke til stede` : a}</span>`;
                     }).join('')}</div>
                 </div>`;
             });

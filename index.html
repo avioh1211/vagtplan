@@ -7,113 +7,273 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ink:       #1a1a1a;
-            --cream:     #FFF9F2;
-            --lavender:  #C8B4E8;
-            --lav-dark:  #9B7FCC;
-            --sky:       #A8CCEA;
-            --sky-dark:  #6FA8CC;
-            --peach:     #F5D5A8;
-            --peach-dark:#D4A870;
-            --lime:      #C8E8A0;
-            --lime-dark: #85BB45;
-            --holbg:     #D4C4F0;
-            --today-glow:#7B4FD4;
-            --absent-bg: #FFF0F0;
-            --absent-red: #E05050;
-            --display:   'Bebas Neue', Impact, 'Arial Black', sans-serif;
-            --mono:      'DM Mono', 'Courier New', monospace;
+            --ink: #1a1a1a; --cream: #FFF9F2; --lavender: #C8B4E8; --lav-dark: #9B7FCC;
+            --sky: #A8CCEA; --sky-dark: #6FA8CC; --peach: #F5D5A8; --peach-dark:#D4A870;
+            --lime: #C8E8A0; --lime-dark: #85BB45; --holbg: #D4C4F0; --today-glow:#7B4FD4;
+            --absent-bg: #FFF0F0; --absent-red: #E05050;
+            --display: 'Bebas Neue', Impact, 'Arial Black', sans-serif; --mono: 'DM Mono', monospace;
         }
-
         * { margin:0; padding:0; box-sizing:border-box; }
-        html, body { width:100%; background:var(--cream); font-family:var(--mono); overflow-x:hidden; }
+        body { background:var(--cream); font-family:var(--mono); color: var(--ink); overflow-x:hidden; }
 
-        /* MASTHEAD */
-        .masthead { background:var(--lavender); border-bottom:4px solid var(--ink); display:grid; grid-template-columns:1fr auto; align-items:stretch; }
-        .mt { padding:1.2rem 1.8rem; }
-        .mt h1 { font-family:var(--display); font-size:clamp(2.8rem,7vw,5.5rem); color:var(--ink); letter-spacing:0.03em; line-height:0.9; }
-        .mt h1 span { color:var(--lav-dark); }
-        .mt-sub { font-size:0.58rem; color:var(--ink); letter-spacing:0.18em; text-transform:uppercase; margin-top:0.5rem; opacity:0.6; }
+        .masthead { background:var(--lavender); border-bottom:4px solid var(--ink); display:grid; grid-template-columns:1fr auto; }
+        .mt { padding:1.2rem; }
+        .mt h1 { font-family:var(--display); font-size:clamp(2.5rem, 7vw, 4.5rem); line-height:0.9; }
+        .mt h1 span { color: var(--lav-dark); }
+        .mt-sub { font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; opacity:0.6; margin-top:0.5rem; }
         
-        .mt-today { background:var(--today-glow); border-left:4px solid var(--ink); padding:1rem 1.6rem; display:flex; flex-direction:column; justify-content:center; align-items:center; min-width:160px; position:relative; overflow:hidden; }
-        .mt-today::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,0.07) 8px,rgba(255,255,255,0.07) 16px); }
-        .mt-today .today-label { font-size:0.5rem; font-weight:700; letter-spacing:0.2em; color:rgba(255,255,255,0.7); text-transform:uppercase; margin-bottom:0.3rem; position:relative; }
-        .mt-today .tday { font-family:var(--display); font-size:2.2rem; letter-spacing:0.05em; color:white; position:relative; }
-        .mt-today .tdate { font-size:0.65rem; font-weight:700; letter-spacing:0.12em; color:white; margin-top:0.25rem; opacity:0.85; position:relative; }
+        .sync-box { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        #syncDot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; transition: 0.3s; }
 
-        /* CONTROLS */
-        .controls { background:var(--cream); border-bottom:4px solid var(--ink); display:flex; flex-wrap:wrap; align-items:center; padding:0.7rem 1.5rem; gap:0.5rem; }
-        .controls-label { font-size:0.5rem; letter-spacing:0.18em; text-transform:uppercase; opacity:0.45; margin-right:0.2rem; }
-        .abtn { font-family:var(--display); font-size:1.15rem; letter-spacing:0.08em; padding:0.3rem 1.2rem; border:3px solid var(--ink); border-radius:40px; cursor:pointer; background:transparent; color:var(--ink); transition:all 0.15s; }
-        .abtn:hover { opacity:0.75; }
-        .abtn.active { background:var(--ink); color:var(--cream); }
-        .abtn[data-agent="Avi"].active   { background:var(--lime);     color:var(--ink); border-color:var(--lime-dark); }
-        .abtn[data-agent="Tarja"].active { background:var(--lavender); color:var(--ink); border-color:var(--lav-dark); }
-        .abtn[data-agent="Mie"].active   { background:var(--peach);    color:var(--ink); border-color:var(--peach-dark); }
+        .controls, .iam-bar { padding: 0.8rem 1.2rem; border-bottom: 4px solid var(--ink); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .iam-bar { background: #1a1a1a; color: white; }
+        
+        .abtn, .iam-btn { font-family:var(--display); font-size: 1.1rem; padding: 5px 18px; border: 3px solid var(--ink); border-radius: 40px; cursor: pointer; background: white; color: var(--ink); }
+        .iam-btn { background: transparent; color: rgba(255,255,255,0.5); border-color: #444; }
+        .iam-btn.active { background: white; color: var(--ink); border-color: white; }
+        .abtn.active { background: var(--ink); color: white; }
 
-        /* IAM BAR */
-        .iam-bar { background:#1a1a1a; border-bottom:4px solid var(--ink); display:flex; flex-wrap:wrap; align-items:center; padding:0.6rem 1.5rem; gap:0.5rem; }
-        .iam-label { font-size:0.5rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-right:0.2rem; }
-        .iam-btn { font-family:var(--display); font-size:1.05rem; letter-spacing:0.08em; padding:0.25rem 1rem; border:2.5px solid rgba(255,255,255,0.3); border-radius:40px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.6); transition:all 0.15s; }
-        .iam-btn:hover { border-color:white; color:white; }
-        .iam-btn.active { background:white; color:var(--ink); border-color:white; }
-        .iam-sep { width:1px; height:1.4rem; background:rgba(255,255,255,0.2); margin:0 0.4rem; }
-        .absent-btn { font-family:var(--display); font-size:0.95rem; letter-spacing:0.08em; padding:0.25rem 1rem; border:2.5px solid rgba(229,80,80,0.5); border-radius:40px; cursor:pointer; background:transparent; color:rgba(229,80,80,0.75); transition:all 0.15s; display:none; }
-        .absent-btn.visible { display:inline-block; }
-        .absent-btn.active { background:var(--absent-red); color:white; border-color:var(--absent-red); }
-        .iam-hint { font-size:0.48rem; letter-spacing:0.1em; color:rgba(255,255,255,0.3); margin-left:auto; font-style:italic; }
-
-        /* WEEK NAVIGATOR */
-        .week-nav { background: var(--peach); border-bottom: 4px solid var(--ink); display: flex; align-items: stretch; height: 64px; }
-        .wnav-arrow { flex: 0 0 72px; background: transparent; border: none; border-right: 4px solid var(--ink); font-size: 1.8rem; cursor: pointer; color: var(--ink); transition: background 0.12s; display: flex; align-items: center; justify-content: center; }
+        .week-nav { background: var(--peach); border-bottom: 4px solid var(--ink); display: flex; align-items: stretch; height: 60px; }
+        .wnav-arrow { width: 70px; border: none; border-right: 4px solid var(--ink); background: transparent; font-size: 1.8rem; cursor: pointer; }
         .wnav-arrow:last-child { border-right: none; border-left: 4px solid var(--ink); }
-        .wnav-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
-        .wnav-label { font-family: var(--display); font-size: 1.4rem; letter-spacing: 0.12em; color: var(--ink); opacity: 0.45; }
-        .wnav-input { font-family: var(--display); font-size: 2.4rem; color: var(--ink); background: transparent; border: none; border-bottom: 3px solid var(--ink); width: 4rem; text-align: center; outline: none; }
-        .wnav-range { font-size: 0.5rem; font-weight: 700; color: var(--ink); opacity: 0.5; text-transform: uppercase; }
+        .wnav-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .wnav-input { font-family: var(--display); font-size: 2.2rem; width: 60px; text-align: center; background: transparent; border: none; border-bottom: 3px solid var(--ink); outline: none; }
 
-        /* GRID */
-        #schedules { min-height: 400px; }
-        .day-grid { display:grid; grid-template-columns:repeat(5,1fr); border-top:4px solid var(--ink); border-left:4px solid var(--ink); width:100%; }
-        .day-col { border-right:4px solid var(--ink); border-bottom:4px solid var(--ink); background:var(--cream); position: relative; }
-        .day-col.today { background:#FAF5FF; box-shadow:inset 0 0 0 3px var(--today-glow); z-index:1; }
+        .day-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-left: 4px solid var(--ink); width: 100%; }
+        .day-col { border-right: 4px solid var(--ink); border-bottom: 4px solid var(--ink); background: var(--cream); min-height: 450px; position: relative; }
+        .day-header { padding: 12px; border-bottom: 4px solid var(--ink); background: var(--sky); }
+        .day-col.today { background: #FAF5FF; box-shadow: inset 0 0 0 3px var(--today-glow); z-index: 1; }
+        .day-col.today .day-header { background: var(--today-glow); color: white; }
+        .day-name { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.05em; }
+        .day-date { font-size: 0.6rem; font-weight: bold; opacity: 0.7; }
 
-        .day-header { background:var(--sky); border-bottom:4px solid var(--ink); padding:0.65rem 0.8rem; }
-        .day-col.today .day-header { background:var(--today-glow); color: white; }
-        .day-name { font-family:var(--display); font-size: 1.2rem; }
-        .day-date { font-size:0.5rem; font-weight:700; opacity: 0.6; }
+        .slot { padding: 12px; border-bottom: 2px solid rgba(0,0,0,0.05); position: relative; }
+        .slot-time { font-size: 0.7rem; font-weight: bold; opacity: 0.5; margin-bottom: 4px; }
+        .agent-tag { font-family: var(--display); font-size: 1rem; padding: 2px 8px; border: 2px solid currentColor; border-radius: 3px; margin-right: 4px; display: inline-block; }
+        .agent-tag.Avi { color: #2A7A2A; } .agent-tag.Tarja { color: #5533AA; } .agent-tag.Mie { color: #BB2277; }
 
-        /* ABSENT STATE */
-        .day-col.absent-day { background: var(--absent-bg); }
-        .day-col.absent-day .slot { display: none; }
-        .absent-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 0.5rem; text-align: center; }
-        .day-col.absent-day .absent-overlay { display: flex; }
-        .absent-text { font-family: var(--display); color: var(--absent-red); font-size: 1.2rem; }
-        .absent-undo { margin-top: 0.5rem; cursor: pointer; border: 1px solid var(--absent-red); padding: 2px 8px; font-size: 0.5rem; border-radius: 10px; background: white; }
-
-        /* SLOTS */
-        .slot { padding:0.55rem 0.75rem; border-bottom:3px solid var(--ink); transition: background 0.2s; position: relative; cursor: default; }
-        .slot:last-child { border-bottom:none; }
-        .slot-time { font-size:0.7rem; font-weight:700; opacity:0.6; margin-bottom:0.3rem; }
-        .agent-tag { font-family:var(--display); font-size: 0.9rem; padding: 2px 6px; border: 2px solid currentColor; margin-right: 4px; border-radius: 3px; display: inline-block; }
-        .agent-tag.Avi { color: #2A7A2A; }
-        .agent-tag.Tarja { color: #5533AA; }
-        .agent-tag.Mie { color: #BB2277; }
-        
         .slot.swappable { cursor: pointer; }
         .slot.swappable:hover { background: rgba(123, 79, 212, 0.1); }
-        .slot.highlighted { background: var(--hl-bg) !important; }
-        .slot.dimmed { opacity: 0.2; }
+        .slot.highlighted { background: var(--hl-color) !important; }
+        .slot.dimmed { opacity: 0.15; }
 
-        /* MODAL */
-        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:100; align-items:center; justify-content:center; }
-        .modal-overlay.open { display:flex; }
-        .modal { background:var(--cream); border:4px solid var(--ink); width:min(400px, 90vw); padding: 1.5rem; box-shadow: 8px 8px 0 var(--ink); }
-        .modal-title { font-family: var(--display); font-size: 2rem; margin-bottom: 1rem; }
-        .swap-options { display: flex; flex-direction: column; gap: 10px; margin: 1rem 0; }
-        .swap-btn { font-family: var(--display); font-size: 1.2rem; padding: 10px; cursor: pointer; border: 3px solid var(--ink); background: white; }
+        .day-col.absent-day { background: var(--absent-bg); }
+        .day-col.absent-day .slot { display: none; }
+        .absent-overlay { display: none; padding: 2rem 1rem; flex-direction: column; align-items: center; text-align: center; }
+        .day-col.absent-day .absent-overlay { display: flex; }
+        .absent-title { font-family: var(--display); font-size: 1.4rem; color: var(--absent-red); }
+        .absent-undo { margin-top: 10px; font-size: 0.5rem; padding: 4px 10px; cursor: pointer; border: 1px solid var(--absent-red); background: white; border-radius: 10px; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--cream); border: 4px solid var(--ink); padding: 25px; width: 90%; max-width: 400px; box-shadow: 10px 10px 0 var(--ink); }
+        .modal-h2 { font-family: var(--display); font-size: 2rem; margin-bottom: 15px; }
+        .swap-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: 3px solid var(--ink); font-family: var(--display); font-size: 1.3rem; cursor: pointer; background: white; }
         .swap-btn:hover { background: var(--ink); color: white; }
-        .btn-cancel { width: 100%; padding: 10px; border: none; cursor: pointer; margin-top: 10px; }
 
-        /* TOAST */
-        .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:var(--ink); color:white; padding:0.8rem 1.5rem; border-radius:40px; font
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 25px; border-radius: 40px; font-size: 0.8rem; display: none; z-index: 1000; }
+
+        @media (max-width: 850px) { .day-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 550px) { .day-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="masthead">
+    <div class="mt">
+        <h1>VAGT<span>PLAN</span></h1>
+        <div class="mt-sub">Agent Schedule 2026 • Live Sync</div>
+        <div class="sync-box">
+            <div id="syncDot"></div>
+            <span id="syncStatus" style="font-size: 0.5rem; font-weight: bold;">AFBRUDT</span>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <span style="font-size:0.5rem; opacity:0.5;">FILTER:</span>
+    <button class="abtn active" data-filter="">ALLE</button>
+    <button class="abtn" data-filter="Avi">AVI</button>
+    <button class="abtn" data-filter="Tarja">TARJA</button>
+    <button class="abtn" data-filter="Mie">MIE</button>
+</div>
+
+<div class="iam-bar">
+    <span style="font-size:0.5rem; opacity:0.5;">JEG ER:</span>
+    <button class="iam-btn" data-iam="Avi">AVI</button>
+    <button class="iam-btn" data-iam="Tarja">TARJA</button>
+    <button class="iam-btn" data-iam="Mie">MIE</button>
+    <button id="absentToggle" style="display:none; margin-left:auto; background:var(--absent-red); color:white; border:none; padding:5px 15px; border-radius:20px; font-family:var(--display); cursor:pointer;">MELD FRI I DAG</button>
+</div>
+
+<div class="week-nav">
+    <button class="wnav-arrow" id="prevWeek">←</button>
+    <div class="wnav-center">
+        <span style="font-family:var(--display); opacity:0.4;">UGE</span>
+        <input type="number" id="weekInput" class="wnav-input" value="9">
+        <span id="weekRange" style="font-size:0.5rem; font-weight:bold;"></span>
+    </div>
+    <button class="wnav-arrow" id="nextWeek">→</button>
+</div>
+
+<div id="scheduleOutput"></div>
+
+<div class="modal-overlay" id="swapModal">
+    <div class="modal">
+        <div class="modal-h2">BYT VAGT</div>
+        <div id="swapInfo" style="margin-bottom:20px; font-size:0.9rem;"></div>
+        <div id="swapOptions"></div>
+        <button onclick="document.getElementById('swapModal').classList.remove('open')" style="width:100%; border:none; background:none; cursor:pointer; text-decoration:underline; font-size:0.7rem;">ANNULLER</button>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
+        authDomain: "vagtplan-fcaf8.firebaseapp.com",
+        projectId: "vagtplan-fcaf8",
+        storageBucket: "vagtplan-fcaf8.firebasestorage.app",
+        messagingSenderId: "1094720834219",
+        appId: "1:1094720834219:web:3e858649614a5393dac5ee"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // --- FULL DATA ---
+    const WEEKS = [{"wi":0,"wn":9,"range":"23/2 – 27/2","days":[{"date":"23/2","name":"Mandag","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/2","name":"Tirsdag","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/2","name":"Onsdag","isToday":true,"slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"26/2","name":"Torsdag","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/2","name":"Fredag","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":1,"wn":10,"range":"2/3 – 6/3","days":[{"date":"2/3","name":"Mandag","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"3/3","name":"Tirsdag","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"4/3","name":"Onsdag","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"5/3","name":"Torsdag","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"6/3","name":"Fredag","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]}];
+
+    let activeWeek = 0;
+    let filterAgent = '';
+    let iamAgent = '';
+    let fbChanges = {};
+
+    const COLORS = { Avi: '#D4F5C4', Tarja: '#E8D5FF', Mie: '#FFD5E8' };
+
+    // --- RENDER ---
+    function render() {
+        const week = WEEKS[activeWeek];
+        document.getElementById('weekRange').textContent = week.range;
+        document.getElementById('weekInput').value = week.wn;
+
+        let html = `<div class="day-grid">`;
+        week.days.forEach((day, di) => {
+            const absKey = `absent_${activeWeek}_${di}`;
+            const isAbsent = fbChanges[absKey];
+            
+            html += `<div class="day-col ${day.isToday ? 'today' : ''} ${isAbsent ? 'absent-day' : ''}">
+                <div class="day-header">
+                    <div class="day-name">${day.name}</div>
+                    <div class="day-date">${day.date}</div>
+                </div>
+                <div class="absent-overlay">
+                    <div class="absent-title">${isAbsent?.agent || ''} ER FRI</div>
+                    <button class="absent-undo" onclick="window.toggleAbsent(${di}, true)">FORTRYD</button>
+                </div>`;
+
+            day.slots.forEach((slot, si) => {
+                const swapKey = `swap_${activeWeek}_${di}_${si}`;
+                const agents = fbChanges[swapKey] ? fbChanges[swapKey].agents : slot.agents;
+                
+                const isHl = filterAgent && agents.includes(filterAgent);
+                const isDim = filterAgent && !agents.includes(filterAgent);
+                const isSwap = iamAgent && agents.includes(iamAgent);
+
+                html += `<div class="slot ${isHl ? 'highlighted' : ''} ${isDim ? 'dimmed' : ''} ${isSwap ? 'swappable' : ''}" 
+                             style="${isHl ? '--hl-color:' + COLORS[filterAgent] : ''}"
+                             onclick="window.handleSlotClick(${di}, ${si}, '${slot.time}', ${JSON.stringify(agents).replace(/"/g, '&quot;')})">
+                    <div class="slot-time">${slot.time}</div>
+                    <div>${agents.map(a => `<span class="agent-tag ${a}">${a}</span>`).join('')}</div>
+                </div>`;
+            });
+            html += `</div>`;
+        });
+        document.getElementById('scheduleOutput').innerHTML = html + `</div>`;
+    }
+
+    // --- LOGIC ---
+    window.handleSlotClick = (di, si, time, agents) => {
+        if (!iamAgent || !agents.includes(iamAgent)) return;
+        const modal = document.getElementById('swapModal');
+        const opts = document.getElementById('swapOptions');
+        document.getElementById('swapInfo').textContent = `${time} - Hvem overtager din vagt?`;
+        
+        opts.innerHTML = '';
+        ['Avi', 'Tarja', 'Mie'].filter(a => a !== iamAgent).forEach(other => {
+            const btn = document.createElement('button');
+            btn.className = 'swap-btn';
+            btn.textContent = `GIV TIL ${other.toUpperCase()}`;
+            btn.onclick = async () => {
+                const newA = agents.map(a => a === iamAgent ? other : a);
+                const key = `swap_${activeWeek}_${di}_${si}`;
+                await setDoc(doc(db, 'vagtplan', 'changes'), { [key]: { agents: newA, ts: Date.now() } }, { merge: true });
+                modal.classList.remove('open');
+                toast("Vagt byttet!");
+            };
+            opts.appendChild(btn);
+        });
+        modal.classList.add('open');
+    };
+
+    window.toggleAbsent = async (di, remove = false) => {
+        if (!iamAgent) return;
+        const key = `absent_${activeWeek}_${di}`;
+        const data = { [key]: remove ? null : { agent: iamAgent, ts: Date.now() } };
+        await setDoc(doc(db, 'vagtplan', 'changes'), data, { merge: true });
+        toast(remove ? "Markering fjernet" : "Markeret som fraværende");
+    };
+
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    // --- LISTENERS ---
+    onSnapshot(doc(db, 'vagtplan', 'changes'), (snap) => {
+        document.getElementById('syncDot').style.background = '#4CAF50';
+        document.getElementById('syncStatus').textContent = 'LIVE';
+        if (snap.exists()) fbChanges = snap.data();
+        render();
+    });
+
+    document.querySelectorAll('.abtn').forEach(b => b.onclick = () => {
+        document.querySelectorAll('.abtn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active'); filterAgent = b.dataset.filter; render();
+    });
+
+    document.querySelectorAll('.iam-btn').forEach(b => b.onclick = () => {
+        if (iamAgent === b.dataset.iam) {
+            iamAgent = ''; b.classList.remove('active');
+            document.getElementById('absentToggle').style.display = 'none';
+        } else {
+            document.querySelectorAll('.iam-btn').forEach(x => x.classList.remove('active'));
+            iamAgent = b.dataset.iam; b.classList.add('active');
+            document.getElementById('absentToggle').style.display = 'block';
+        }
+        render();
+    });
+
+    document.getElementById('absentToggle').onclick = () => {
+        const todayIdx = WEEKS[activeWeek].days.findIndex(d => d.isToday);
+        if (todayIdx !== -1) window.toggleAbsent(todayIdx);
+        else alert("Vælg ugen med 'I DAG' markeringen for at bruge denne genvej.");
+    };
+
+    document.getElementById('prevWeek').onclick = () => { if(activeWeek > 0) { activeWeek--; render(); } };
+    document.getElementById('nextWeek').onclick = () => { if(activeWeek < WEEKS.length-1) { activeWeek++; render(); } };
+    document.getElementById('weekInput').onchange = (e) => {
+        const idx = WEEKS.findIndex(w => w.wn == e.target.value);
+        if (idx !== -1) { activeWeek = idx; render(); }
+    };
+
+    render(); // Initial draw
+</script>
+
+</body>
+</html>

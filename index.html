@@ -10,7 +10,7 @@
             --ink: #1a1a1a; --cream: #FFF9F2; --lavender: #C8B4E8; --lav-dark: #9B7FCC;
             --sky: #A8CCEA; --sky-dark: #6FA8CC; --peach: #F5D5A8; --peach-dark:#D4A870;
             --lime: #C8E8A0; --lime-dark: #85BB45; --holbg: #D4C4F0; --today-glow:#7B4FD4;
-            --absent-bg: #FFF0F0; --absent-red: #E05050;
+            --absent-bg: #FFF0F0; --absent-red: #E05050; --changed-orange: #E67E22;
             --display: 'Bebas Neue', Impact, 'Arial Black', sans-serif; --mono: 'DM Mono', monospace;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -37,37 +37,35 @@
         .wnav-arrow { width: 70px; border: none; border-right: 4px solid var(--ink); background: transparent; font-size: 1.8rem; cursor: pointer; }
         .wnav-arrow:last-child { border-right: none; border-left: 4px solid var(--ink); }
         .wnav-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; }
-        .wnav-input { font-family: var(--display); font-size: 2.2rem; width: 60px; text-align: center; background: transparent; border: none; border-bottom: 3px solid var(--ink); outline: none; }
+        .wnav-input { font-family: var(--display); font-size: 2.2rem; width: 60px; text-align: center; background: transparent; border: none; border-bottom: 3px solid var(--ink); outline: none; pointer-events: none; }
 
-        /* Ny sektion til timer */
         .hours-bar { background: var(--ink); color: white; padding: 10px 20px; border-bottom: 4px solid var(--ink); display: flex; justify-content: space-around; font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.05em; }
         .hours-bar span { opacity: 0.8; }
         .hours-bar b { color: var(--lime); font-size: 1.4rem; margin-left: 5px; opacity: 1; }
 
         .day-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-left: 4px solid var(--ink); width: 100%; }
         .day-col { border-right: 4px solid var(--ink); border-bottom: 4px solid var(--ink); background: var(--cream); min-height: 450px; position: relative; }
-        .day-header { padding: 12px; border-bottom: 4px solid var(--ink); background: var(--sky); }
+        .day-header { padding: 12px; border-bottom: 4px solid var(--ink); background: var(--sky); display: flex; flex-direction: column; gap: 5px; }
         .day-col.today { background: #FAF5FF; box-shadow: inset 0 0 0 3px var(--today-glow); z-index: 1; }
         .day-col.today .day-header { background: var(--today-glow); color: white; }
-        .day-name { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.05em; }
+        .day-name { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.05em; line-height: 1; }
         .day-date { font-size: 0.6rem; font-weight: bold; opacity: 0.7; }
 
+        .day-free-btn { background: white; color: var(--ink); border: 2px solid var(--ink); padding: 4px 8px; font-family: var(--display); font-size: 0.8rem; cursor: pointer; border-radius: 4px; align-self: flex-start; }
+        .day-free-btn:hover { background: var(--absent-red); color: white; border-color: var(--absent-red); }
+
         .slot { padding: 12px; border-bottom: 2px solid rgba(0,0,0,0.05); position: relative; }
-        .slot-time { font-size: 0.7rem; font-weight: bold; opacity: 0.5; margin-bottom: 4px; }
-        .agent-tag { font-family: var(--display); font-size: 1rem; padding: 2px 8px; border: 2px solid currentColor; border-radius: 3px; margin-right: 4px; display: inline-block; }
+        .slot-time { font-size: 0.7rem; font-weight: bold; opacity: 0.5; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .agent-tag { font-family: var(--display); font-size: 1rem; padding: 2px 8px; border: 2px solid currentColor; border-radius: 3px; margin-right: 4px; display: inline-block; margin-bottom: 2px; }
         .agent-tag.Avi { color: #2A7A2A; } .agent-tag.Tarja { color: #5533AA; } .agent-tag.Mie { color: #BB2277; }
+        .agent-tag.is-absent { opacity: 0.4; text-decoration: line-through; border-style: dashed; }
+        
+        .changed-badge { background: var(--changed-orange); color: white; font-family: var(--display); font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; opacity: 1 !important; }
 
         .slot.swappable { cursor: pointer; }
         .slot.swappable:hover { background: rgba(123, 79, 212, 0.1); }
         .slot.highlighted { background: var(--hl-color) !important; }
         .slot.dimmed { opacity: 0.15; }
-
-        .day-col.absent-day { background: var(--absent-bg); }
-        .day-col.absent-day .slot { display: none; }
-        .absent-overlay { display: none; padding: 2rem 1rem; flex-direction: column; align-items: center; text-align: center; }
-        .day-col.absent-day .absent-overlay { display: flex; }
-        .absent-title { font-family: var(--display); font-size: 1.4rem; color: var(--absent-red); }
-        .absent-undo { margin-top: 10px; font-size: 0.5rem; padding: 4px 10px; cursor: pointer; border: 1px solid var(--absent-red); background: white; border-radius: 10px; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; }
         .modal-overlay.open { display: flex; }
@@ -75,6 +73,8 @@
         .modal-h2 { font-family: var(--display); font-size: 2rem; margin-bottom: 15px; }
         .swap-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: 3px solid var(--ink); font-family: var(--display); font-size: 1.3rem; cursor: pointer; background: white; }
         .swap-btn:hover { background: var(--ink); color: white; }
+        .swap-btn.undo-btn { border-color: var(--absent-red); color: var(--absent-red); margin-top: 15px; }
+        .swap-btn.undo-btn:hover { background: var(--absent-red); color: white; }
 
         #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 25px; border-radius: 40px; font-size: 0.8rem; display: none; z-index: 1000; }
 
@@ -108,14 +108,13 @@
     <button class="iam-btn" data-iam="Avi">AVI</button>
     <button class="iam-btn" data-iam="Tarja">TARJA</button>
     <button class="iam-btn" data-iam="Mie">MIE</button>
-    <button id="absentToggle" style="display:none; margin-left:auto; background:var(--absent-red); color:white; border:none; padding:5px 15px; border-radius:20px; font-family:var(--display); cursor:pointer;">MELD FRI I DAG</button>
 </div>
 
 <div class="week-nav">
     <button class="wnav-arrow" id="prevWeek">←</button>
     <div class="wnav-center">
         <span style="font-family:var(--display); opacity:0.4;">UGE</span>
-        <input type="number" id="weekInput" class="wnav-input" value="9">
+        <input type="text" id="weekInput" class="wnav-input" value="9" readonly>
         <span id="weekRange" style="font-size:0.5rem; font-weight:bold;"></span>
     </div>
     <button class="wnav-arrow" id="nextWeek">→</button>
@@ -134,7 +133,7 @@
         <div class="modal-h2">BYT VAGT</div>
         <div id="swapInfo" style="margin-bottom:20px; font-size:0.9rem;"></div>
         <div id="swapOptions"></div>
-        <button onclick="document.getElementById('swapModal').classList.remove('open')" style="width:100%; border:none; background:none; cursor:pointer; text-decoration:underline; font-size:0.7rem;">ANNULLER</button>
+        <button onclick="document.getElementById('swapModal').classList.remove('open')" style="width:100%; border:none; background:none; cursor:pointer; text-decoration:underline; font-size:0.7rem; margin-top:10px;">ANNULLER</button>
     </div>
 </div>
 
@@ -142,7 +141,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
@@ -156,116 +155,46 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- FULL OPDATERET DATA ---
+    // --- FULL OPDATERET DATA (4 Uger) ---
     const WEEKS = [
       {
         "wi": 0, "wn": 9, "range": "23/2 – 27/2",
         "days": [
-          {"date": "23/2", "name": "Mandag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Avi", "Tarja"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Avi", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Avi", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Avi", "Mie"]},
-            {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]},
-            {"time": "15:00-16:00", "agents": ["Mie"]}
-          ]},
-          {"date": "24/2", "name": "Tirsdag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Tarja", "Mie"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Avi", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Avi", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Avi", "Mie"]},
-            {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]},
-            {"time": "15:00-16:00", "agents": ["Avi"]}
-          ]},
-          {"date": "25/2", "name": "Onsdag", "isToday": true, "slots": [
-            {"time": "08:00-12:00", "agents": ["Mie", "Avi"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Avi", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Avi", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Avi", "Mie"]},
-            {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]},
-            {"time": "15:00-16:00", "agents": ["Tarja"]}
-          ]},
-          {"date": "26/2", "name": "Torsdag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Avi", "Tarja"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Avi", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Avi", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]},
-            {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]},
-            {"time": "15:00-16:00", "agents": ["Mie"]}
-          ]},
-          {"date": "27/2", "name": "Fredag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Tarja", "Mie"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Avi", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Avi", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]},
-            {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]},
-            {"time": "15:00-16:00", "agents": ["Tarja"]}
-          ]}
+          {"date": "23/2", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "24/2", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
+          {"date": "25/2", "name": "Onsdag", "isToday": true, "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
+          {"date": "26/2", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "27/2", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}
         ]
       },
       {
         "wi": 1, "wn": 10, "range": "2/3 – 6/3",
         "days": [
-          {"date": "2/3", "name": "Mandag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Mie", "Avi"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]},
-            {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]},
-            {"time": "15:00-16:00", "agents": ["Mie"]}
-          ]},
-          {"date": "3/3", "name": "Tirsdag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Avi", "Tarja"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]},
-            {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]},
-            {"time": "15:00-16:00", "agents": ["Tarja"]}
-          ]},
-          {"date": "4/3", "name": "Onsdag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Tarja", "Mie"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]},
-            {"time": "14:30-15:00", "agents": ["Mie", "Avi"]},
-            {"time": "15:00-16:00", "agents": ["Avi"]}
-          ]},
-          {"date": "5/3", "name": "Torsdag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Mie", "Avi"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]},
-            {"time": "14:30-15:00", "agents": ["Mie", "Avi"]},
-            {"time": "15:00-16:00", "agents": ["Mie"]}
-          ]},
-          {"date": "6/3", "name": "Fredag", "slots": [
-            {"time": "08:00-12:00", "agents": ["Avi", "Tarja"]},
-            {"time": "12:00-12:30", "agents": ["Avi"]},
-            {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]},
-            {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]},
-            {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]},
-            {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]},
-            {"time": "14:30-15:00", "agents": ["Mie", "Avi"]},
-            {"time": "15:00-16:00", "agents": ["Avi"]}
-          ]}
+          {"date": "2/3", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "3/3", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
+          {"date": "4/3", "name": "Onsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
+          {"date": "5/3", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "6/3", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}
+        ]
+      },
+      {
+        "wi": 2, "wn": 11, "range": "9/3 – 13/3",
+        "days": [
+          {"date": "9/3", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "10/3", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
+          {"date": "11/3", "name": "Onsdag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
+          {"date": "12/3", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "13/3", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}
+        ]
+      },
+      {
+        "wi": 3, "wn": 12, "range": "16/3 – 20/3",
+        "days": [
+          {"date": "16/3", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "17/3", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
+          {"date": "18/3", "name": "Onsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
+          {"date": "19/3", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
+          {"date": "20/3", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}
         ]
       }
     ];
@@ -287,46 +216,61 @@
         let hoursCount = { Avi: 0, Tarja: 0, Mie: 0 };
 
         week.days.forEach((day, di) => {
-            const absKey = `absent_${activeWeek}_${di}`;
-            const isAbsent = fbChanges[absKey];
-            const absentAgent = isAbsent ? isAbsent.agent : null;
+            // Find who is marked absent on this specific day
+            let absentAgents = [];
+            ['Avi', 'Tarja', 'Mie'].forEach(a => {
+                if (fbChanges[`abs_${activeWeek}_${di}_${a}`]) absentAgents.push(a);
+            });
             
-            html += `<div class="day-col ${day.isToday ? 'today' : ''} ${isAbsent ? 'absent-day' : ''}">
+            html += `<div class="day-col ${day.isToday ? 'today' : ''}">
                 <div class="day-header">
-                    <div class="day-name">${day.name}</div>
-                    <div class="day-date">${day.date}</div>
-                </div>
-                <div class="absent-overlay">
-                    <div class="absent-title">${absentAgent || ''} ER FRI</div>
-                    <button class="absent-undo" onclick="window.toggleAbsent(${di}, true)">FORTRYD</button>
-                </div>`;
+                    <div>
+                        <div class="day-name">${day.name}</div>
+                        <div class="day-date">${day.date}</div>
+                    </div>`;
+            
+            // Show "Meld mig fri" button if logged in and not already absent
+            if (iamAgent && !absentAgents.includes(iamAgent)) {
+                html += `<button class="day-free-btn" onclick="window.toggleAbsent(${di}, false)">MELD MIG FRI</button>`;
+            }
+            html += `</div>`;
+            
+            // Undo banner if the logged in agent IS absent today
+            if (iamAgent && absentAgents.includes(iamAgent)) {
+                html += `<div style="background:var(--absent-red); color:white; font-family:var(--display); font-size:0.8rem; text-align:center; padding:5px; cursor:pointer;" onclick="window.toggleAbsent(${di}, true)">JEG ER FRI - FORTRYD</div>`;
+            }
 
             day.slots.forEach((slot, si) => {
                 const swapKey = `swap_${activeWeek}_${di}_${si}`;
-                const agents = fbChanges[swapKey] ? fbChanges[swapKey].agents : slot.agents;
+                const swapData = fbChanges[swapKey];
+                const currentAgents = (swapData && swapData.agents) ? swapData.agents : slot.agents;
                 
-                // Udregn varighed af vagt for live-beregning
                 const [start, end] = slot.time.split('-');
                 const [sH, sM] = start.split(':').map(Number);
                 const [eH, eM] = end.split(':').map(Number);
                 const duration = (eH + eM/60) - (sH + sM/60);
 
-                // Læg timer til agenterne, medmindre de har meldt fravær hele dagen
-                agents.forEach(a => {
-                    if (a !== absentAgent) {
-                        hoursCount[a] += duration;
-                    }
+                currentAgents.forEach(a => {
+                    if (!absentAgents.includes(a)) hoursCount[a] += duration;
                 });
 
-                const isHl = filterAgent && agents.includes(filterAgent);
-                const isDim = filterAgent && !agents.includes(filterAgent);
-                const isSwap = iamAgent && agents.includes(iamAgent);
+                // Is swappable if I am currently scheduled, OR if I was originally scheduled and someone else has it now (so I can undo it)
+                const isSwappable = iamAgent && (currentAgents.includes(iamAgent) || (swapData && slot.agents.includes(iamAgent)));
+                
+                const isHl = filterAgent && currentAgents.includes(filterAgent);
+                const isDim = filterAgent && !currentAgents.includes(filterAgent);
 
-                html += `<div class="slot ${isHl ? 'highlighted' : ''} ${isDim ? 'dimmed' : ''} ${isSwap ? 'swappable' : ''}" 
+                html += `<div class="slot ${isHl ? 'highlighted' : ''} ${isDim ? 'dimmed' : ''} ${isSwappable ? 'swappable' : ''}" 
                              style="${isHl ? '--hl-color:' + COLORS[filterAgent] : ''}"
-                             onclick="window.handleSlotClick(${di}, ${si}, '${slot.time}', ${JSON.stringify(agents).replace(/"/g, '&quot;')})">
-                    <div class="slot-time">${slot.time}</div>
-                    <div>${agents.map(a => `<span class="agent-tag ${a}">${a}</span>`).join('')}</div>
+                             onclick="window.handleSlotClick(${di}, ${si})">
+                    <div class="slot-time">
+                        ${slot.time}
+                        ${swapData ? `<span class="changed-badge">ÆNDRET</span>` : ''}
+                    </div>
+                    <div>${currentAgents.map(a => {
+                        const isThisAgentAbsent = absentAgents.includes(a);
+                        return `<span class="agent-tag ${a} ${isThisAgentAbsent ? 'is-absent' : ''}">${isThisAgentAbsent ? `${a}-fri` : a}</span>`;
+                    }).join('')}</div>
                 </div>`;
             });
             html += `</div>`;
@@ -334,7 +278,6 @@
         
         document.getElementById('scheduleOutput').innerHTML = html + `</div>`;
 
-        // Opdater timer i toppen
         document.getElementById('hoursBar').innerHTML = 
             `<span>AVI: <b>${hoursCount.Avi.toFixed(1)}t</b></span>` +
             `<span>TARJA: <b>${hoursCount.Tarja.toFixed(1)}t</b></span>` +
@@ -342,33 +285,59 @@
     }
 
     // --- LOGIC ---
-    window.handleSlotClick = (di, si, time, agents) => {
-        if (!iamAgent || !agents.includes(iamAgent)) return;
+    window.handleSlotClick = (di, si) => {
+        if (!iamAgent) return;
+        const week = WEEKS[activeWeek];
+        const slot = week.days[di].slots[si];
+        
+        const swapKey = `swap_${activeWeek}_${di}_${si}`;
+        const swapData = fbChanges[swapKey];
+        const currentAgents = (swapData && swapData.agents) ? swapData.agents : slot.agents;
+        
+        const canGiveAway = currentAgents.includes(iamAgent);
+        const canUndo = swapData && slot.agents.includes(iamAgent); // Only originally scheduled agents can undo a shift change
+
+        if (!canGiveAway && !canUndo) return;
+
         const modal = document.getElementById('swapModal');
         const opts = document.getElementById('swapOptions');
-        document.getElementById('swapInfo').textContent = `${time} - Hvem overtager din vagt?`;
-        
+        document.getElementById('swapInfo').textContent = `${slot.time} - Hvad vil du gøre?`;
         opts.innerHTML = '';
-        ['Avi', 'Tarja', 'Mie'].filter(a => a !== iamAgent).forEach(other => {
+
+        if (canGiveAway) {
+            ['Avi', 'Tarja', 'Mie'].filter(a => a !== iamAgent && !currentAgents.includes(a)).forEach(other => {
+                const btn = document.createElement('button');
+                btn.className = 'swap-btn';
+                btn.textContent = `GIV VAGT TIL ${other.toUpperCase()}`;
+                btn.onclick = async () => {
+                    const newA = currentAgents.map(a => a === iamAgent ? other : a);
+                    await setDoc(doc(db, 'vagtplan', 'changes'), { [swapKey]: { agents: newA, ts: Date.now() } }, { merge: true });
+                    modal.classList.remove('open');
+                    toast("Vagt byttet!");
+                };
+                opts.appendChild(btn);
+            });
+        }
+
+        if (canUndo) {
             const btn = document.createElement('button');
-            btn.className = 'swap-btn';
-            btn.textContent = `GIV TIL ${other.toUpperCase()}`;
+            btn.className = 'swap-btn undo-btn';
+            btn.textContent = `FORTRYD ÆNDRING (GENDAN)`;
             btn.onclick = async () => {
-                const newA = agents.map(a => a === iamAgent ? other : a);
-                const key = `swap_${activeWeek}_${di}_${si}`;
-                await setDoc(doc(db, 'vagtplan', 'changes'), { [key]: { agents: newA, ts: Date.now() } }, { merge: true });
+                await setDoc(doc(db, 'vagtplan', 'changes'), { [swapKey]: deleteField() }, { merge: true });
                 modal.classList.remove('open');
-                toast("Vagt byttet!");
+                toast("Ændring fortrudt!");
             };
             opts.appendChild(btn);
-        });
+        }
+
         modal.classList.add('open');
     };
 
     window.toggleAbsent = async (di, remove = false) => {
         if (!iamAgent) return;
-        const key = `absent_${activeWeek}_${di}`;
-        const data = { [key]: remove ? null : { agent: iamAgent, ts: Date.now() } };
+        const key = `abs_${activeWeek}_${di}_${iamAgent}`;
+        const data = { [key]: remove ? deleteField() : true };
         await setDoc(doc(db, 'vagtplan', 'changes'), data, { merge: true });
         toast(remove ? "Markering fjernet" : "Markeret som fraværende");
     };
@@ -395,27 +364,15 @@
     document.querySelectorAll('.iam-btn').forEach(b => b.onclick = () => {
         if (iamAgent === b.dataset.iam) {
             iamAgent = ''; b.classList.remove('active');
-            document.getElementById('absentToggle').style.display = 'none';
         } else {
             document.querySelectorAll('.iam-btn').forEach(x => x.classList.remove('active'));
             iamAgent = b.dataset.iam; b.classList.add('active');
-            document.getElementById('absentToggle').style.display = 'block';
         }
         render();
     });
 
-    document.getElementById('absentToggle').onclick = () => {
-        const todayIdx = WEEKS[activeWeek].days.findIndex(d => d.isToday);
-        if (todayIdx !== -1) window.toggleAbsent(todayIdx);
-        else alert("Vælg ugen med 'I DAG' markeringen for at bruge denne genvej.");
-    };
-
     document.getElementById('prevWeek').onclick = () => { if(activeWeek > 0) { activeWeek--; render(); } };
     document.getElementById('nextWeek').onclick = () => { if(activeWeek < WEEKS.length-1) { activeWeek++; render(); } };
-    document.getElementById('weekInput').onchange = (e) => {
-        const idx = WEEKS.findIndex(w => w.wn == e.target.value);
-        if (idx !== -1) { activeWeek = idx; render(); }
-    };
 
     render(); // Initial draw
 </script>

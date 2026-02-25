@@ -589,7 +589,11 @@ function fbSaveAbsent(wi, di, agent){
   var update = {};
   update[key] = val;
   fset(fdoc(db,'vagtplan','changes'), update, {merge:true})
-    .catch(function(e){ console.error('Firebase absent error', e); });
+    .then(function(){ console.log('Firebase absent write OK'); })
+    .catch(function(e){
+      console.error('Firebase absent write FAILED:', e.code, e.message);
+      toast('FEJL: Fraværsdag ikke gemt (' + (e.code||e.message) + ')', true);
+    });
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -850,7 +854,13 @@ function fbSaveSwap(wi, di, si, agents, originalAgents){
 
   var update={};
   update[key]={ wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts:Date.now() };
-  fset(docRef, update, {merge:true}).catch(function(e){ console.error('Firebase save error',e); });
+  fset(docRef, update, {merge:true}).then(function(){
+    console.log('Firebase write OK:', key);
+  }).catch(function(e){
+    console.error('Firebase write FAILED:', e.code, e.message);
+    // Show visible error so we know writes are failing (e.g. security rules)
+    toast('FEJL: Ændring blev ikke gemt (' + (e.code||e.message) + ')', true);
+  });
 }
 
 document.getElementById('modalClose').addEventListener('click', closeModal);

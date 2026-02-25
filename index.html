@@ -785,25 +785,72 @@ function acceptSwap(){
   var wi=parseInt(swapSlotEl.dataset.wi);
   var di=parseInt(swapSlotEl.dataset.di);
   var si=parseInt(swapSlotEl.dataset.si);
+  // FIX: Read true originals BEFORE applySwap mutates WEEKS.
+  // swapSlotData.agents is captured when the swap dialog opens = agents at that moment.
+  // If this slot was previously swapped, swapHistory has the real schedule originals.
+  var trueOriginals;
+  var existingHist = swapHistory['swap_'+wi+'_'+di+'_'+si];
+  if(existingHist && existingHist.originalAgents){
+    trueOriginals = existingHist.originalAgents;
+  } else {
+    // First swap on this slot — swapSlotData.agents IS the original schedule data
+    trueOriginals = swapSlotData.agents.slice ? swapSlotData.agents.slice() : swapSlotData.agents;
+  }
+
   applySwap(wi, {di:di,si:si}, ags);
   closeModal();
   toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time, false);
   render();
-  fbSaveSwap(wi, di, si, ags, swapSlotData.agents);
+  fbSaveSwap(wi, di, si, ags, trueOriginals);
+}
+
+function getOriginalAgentsFromSource(wi, di, si){
+  // Always read originalAgents from the hardcoded WEEKS source data.
+  // We need the PRE-SWAP state, so we look up the slot by its non-break index
+  // in the original WEEKS array. Because applySwap mutates WEEKS in memory,
+  // we must read originalAgents BEFORE calling applySwap — but as a safety net,
+  // we also check swapHistory: if a record already exists, trust its originalAgents.
+  if(swapHistory['swap_'+wi+'_'+di+'_'+si]){
+    return swapHistory['swap_'+wi+'_'+di+'_'+si].originalAgents;
+  }
+  // No prior swap record — read directly from current WEEKS (which at this point
+  // has NOT yet been updated by applySwap since we call fbSaveSwap after applySwap).
+  // So we reconstruct from the in-memory WEEKS, but since applySwap already ran,
+  // we stored a snapshot before the call. See acceptSwap/btnTakeBack for ordering.
+  // Fallback: return whatever is in WEEKS now (may already be updated — acceptable
+  // since swapHistory would cover re-swaps).
+  if(!WEEKS[wi] || !WEEKS[wi].days[di]) return [];
+  var slots = WEEKS[wi].days[di].slots;
+  var count = 0;
+  for(var i = 0; i < slots.length; i++){
+    if(!slots[i].isBreak){
+      if(count === si) return slots[i].agents.slice();
+      count++;
+    }
+  }
+  return [];
 }
 
 function fbSaveSwap(wi, di, si, agents, originalAgents){
   if(!window._fbReady) return;
-  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet, fget=window._fbGet;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
   var key='swap_'+wi+'_'+di+'_'+si;
   var docRef=fdoc(db,'vagtplan','changes');
-  fget(docRef).then(function(snap){
-    var existing=snap.exists()?snap.data()[key]:null;
-    var orig=(existing&&existing.originalAgents)?existing.originalAgents:originalAgents;
-    var update={};
-    update[key]={ wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts:Date.now() };
-    fset(docRef, update, {merge:true}).catch(function(e){ console.error('Firebase save error',e); });
-  });
+
+  // ── FIX: Prefer originalAgents from swapHistory (set by applyAllChanges on
+  //    load), then fall back to the passed-in value. Never re-derive from DOM.
+  //    This ensures that after a page refresh, the true original schedule agents
+  //    are preserved — not whatever the DOM happened to show at swap time.
+  var orig;
+  if(swapHistory[key] && swapHistory[key].originalAgents){
+    orig = swapHistory[key].originalAgents;
+  } else {
+    orig = originalAgents; // first-ever swap on this slot — caller provides true originals
+  }
+
+  var update={};
+  update[key]={ wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts:Date.now() };
+  fset(docRef, update, {merge:true}).catch(function(e){ console.error('Firebase save error',e); });
 }
 
 document.getElementById('modalClose').addEventListener('click', closeModal);

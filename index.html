@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vagtplan 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:      #1a1a1a;
+    --cream:    #FFF9F2;
+    --lavender: #C8B4E8;
+    --lav-dark: #9B7FCC;
+    --sky:      #A8CCEA;
+    --sky-dark: #6FA8CC;
+    --peach:    #F5D5A8;
+    --peach-dark:#D4A870;
+    --lime:     #C8E8A0;
+    --lime-dark:#85BB45;
+    --holbg:    #D4C4F0;
+    --display:  'Bebas Neue', Impact, 'Arial Black', sans-serif;
+    --mono:     'DM Mono', 'Courier New', monospace;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; background:var(--cream); font-family:var(--mono); overflow-x:hidden; }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    background: var(--lavender);
+    border-bottom: 4px solid var(--ink);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: stretch;
+  }
+  .mt { padding: 1.2rem 1.8rem; }
+  .mt h1 {
+    font-family: var(--display);
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    color: var(--ink);
+    letter-spacing: 0.03em;
+    line-height: 0.9;
+  }
+  .mt h1 span { color: var(--lav-dark); }
+  .mt-sub { font-size: 0.58rem; color: var(--ink); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 0.5rem; opacity: 0.6; }
+
+  .mt-today {
+    background: var(--sky);
+    border-left: 4px solid var(--ink);
+    padding: 1rem 1.6rem;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    min-width: 130px;
+  }
+  .mt-today .tday  { font-family: var(--display); font-size: 1.9rem; letter-spacing: 0.05em; color: var(--ink); }
+  .mt-today .tdate { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em; color: var(--ink); margin-top: 0.25rem; opacity: 0.65; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--cream);
+    border-bottom: 4px solid var(--ink);
+    display: flex; flex-wrap: wrap; align-items: center;
+    padding: 0.7rem 1.5rem; gap: 0.5rem;
+  }
+  .controls-label { font-size: 0.5rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.45; margin-right: 0.2rem; }
+
+  .abtn {
+    font-family: var(--display);
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 1.2rem;
+    border: 3px solid var(--ink);
+    border-radius: 40px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink);
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .abtn:hover  { opacity: 0.75; }
+  .abtn.active { background: var(--ink); color: var(--cream); }
+  .abtn[data-agent="Avi"].active   { background: var(--lime);     color: var(--ink); border-color: var(--lime-dark); }
+  .abtn[data-agent="Tarja"].active { background: var(--lavender); color: var(--ink); border-color: var(--lav-dark); }
+  .abtn[data-agent="Mie"].active   { background: var(--peach);    color: var(--ink); border-color: var(--peach-dark); }
+
+  /* ── WEEK TABS ── */
+  .week-tabs {
+    background: var(--peach);
+    border-bottom: 4px solid var(--ink);
+    display: flex;
+  }
+  .wtab {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 0.06rem;
+    padding: 0.55rem 0.5rem;
+    border-right: 3px solid var(--ink);
+    cursor: pointer;
+    transition: background 0.12s;
+    border-bottom: 4px solid transparent;
+    margin-bottom: -4px;
+  }
+  .wtab:last-child { border-right: none; }
+  .wtab:hover { background: color-mix(in srgb, var(--peach) 50%, white); }
+  .wtab.active { background: var(--sky); border-bottom: 4px solid var(--ink); }
+  .wtab .wt-main { font-family: var(--display); font-size: 1rem; letter-spacing: 0.1em; color: var(--ink); }
+  .wtab .wt-sub  { font-size: 0.44rem; font-weight: 700; letter-spacing: 0.07em; color: var(--ink); opacity: 0.6; }
+  .wtab .wt-vp   { font-size: 0.4rem; letter-spacing: 0.04em; color: var(--lav-dark); opacity: 0.8; }
+
+  /* ── SCHEDULE ── */
+  .schedule { display: none; animation: fadeIn 0.2s ease; }
+  .schedule.visible { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── GRID ── */
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    border-top: 4px solid var(--ink);
+    border-left: 4px solid var(--ink);
+    width: 100%;
+  }
+  .day-col {
+    border-right: 4px solid var(--ink);
+    border-bottom: 4px solid var(--ink);
+    display: flex; flex-direction: column;
+    background: var(--cream);
+    min-width: 0;
+  }
+
+  /* ── DAY HEADER ── */
+  .day-header {
+    background: var(--sky);
+    border-bottom: 4px solid var(--ink);
+    padding: 0.65rem 0.8rem;
+    flex-shrink: 0;
+  }
+  .day-col.today   .day-header { background: var(--lavender); }
+  .day-col.holiday .day-header { background: var(--holbg); }
+  .day-name { font-family: var(--display); font-size: clamp(0.85rem,1.4vw,1.2rem); letter-spacing: 0.05em; color: var(--ink); }
+  .day-date { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.12rem; color: var(--ink); opacity: 0.6; }
+  .today-pill {
+    display: inline-block;
+    background: var(--lav-dark); color: white;
+    font-size: 0.42rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 0.1rem 0.4rem; border-radius: 20px; margin-top: 0.25rem;
+  }
+  .holiday-name { font-size: 0.44rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin-top: 0.18rem; color: var(--lav-dark); line-height: 1.3; }
+
+  /* ── HOLIDAY BODY ── */
+  .day-col.holiday .slot { display: none; }
+  .holiday-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem 0.5rem; gap:0.4rem; background:var(--holbg); }
+  .holiday-icon { font-size: 1.5rem; line-height:1; }
+  .holiday-off  { font-family: var(--display); font-size: 1rem; letter-spacing: 0.1em; color: var(--lav-dark); }
+  .holiday-sub  { font-size: 0.42rem; color: var(--ink); letter-spacing: 0.08em; text-align: center; opacity: 0.55; text-transform: uppercase; }
+
+  /* ── SLOTS ── */
+  .slot { padding: 0.45rem 0.75rem; border-bottom: 3px solid var(--ink); background: var(--cream); flex-shrink: 0; transition: background-color 0.15s; }
+  .slot:last-child { border-bottom: none; }
+  .day-col.today .slot, .day-col.today .slot.break-slot { border-left: 4px solid var(--lav-dark); padding-left: 0.5rem; }
+  .slot-time { font-size: 0.44rem; font-weight: 700; letter-spacing: 0.05em; color: var(--ink); opacity: 0.4; margin-bottom: 0.25rem; text-transform: uppercase; }
+  .slot-agents { display: flex; flex-wrap: wrap; gap: 0.22rem; }
+
+  .agent-tag {
+    font-family: var(--display);
+    font-size: clamp(0.7rem, 1.1vw, 0.9rem);
+    letter-spacing: 0.06em;
+    padding: 0.02rem 0.4rem;
+    border: 2.5px solid currentColor;
+    border-radius: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .agent-tag.Avi   { color: #2A7A2A; background: rgba(100,200,80,0.15); }
+  .agent-tag.Tarja { color: #5533AA; background: rgba(150,100,220,0.15); }
+  .agent-tag.Mie   { color: #BB2277; background: rgba(220,80,150,0.15); }
+
+  /* ── BREAKS ── */
+  .slot.break-slot {
+    background-color: #EDE8F8;
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0,0,0,0.05) 4px, rgba(0,0,0,0.05) 8px);
+  }
+  .slot.break-slot .slot-time { opacity: 0.35; }
+  .break-label { font-size: 0.44rem; font-weight: 700; letter-spacing: 0.07em; color: var(--ink); opacity: 0.45; text-transform: uppercase; }
+
+  /* ── HIGHLIGHT ── */
+  .slot.highlighted { background-color: var(--hl-bg, #C8E8A0) !important; background-image: none !important; }
+  .slot.dimmed .agent-tag { opacity: 0.1; }
+  .slot.dimmed .agent-tag.hl-agent { opacity: 1; }
+
+  /* ── LEGEND ── */
+  .legend { background: var(--sky); border-top: 4px solid var(--ink); padding: 0.65rem 1.5rem; display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; }
+  .legend-item { font-size: 0.48rem; letter-spacing: 0.09em; color: var(--ink); text-transform: uppercase; opacity: 0.7; }
+  .legend-item strong { opacity: 1; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width:860px) { .day-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width:560px) { .day-grid { grid-template-columns: 1fr 1fr; } .masthead { grid-template-columns: 1fr; } .mt-today { border-left:none; border-top:4px solid var(--ink); flex-direction:row; gap:1rem; } }
+  @media (max-width:340px) { .day-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mt">
+    <h1>VAGT<span>PLAN</span></h1>
+    <div class="mt-sub">Agent Schedule &middot; 3-Week Rotation &middot; 2026</div>
+  </div>
+  <div class="mt-today">
+    <div class="tday" id="todayDay">—</div>
+    <div class="tdate" id="todayDate">—</div>
+  </div>
+</div>
+
+<div class="controls">
+  <span class="controls-label">FILTER</span>
+  <button class="abtn active" data-agent="">ALLE</button>
+  <button class="abtn" data-agent="Avi">AVI</button>
+  <button class="abtn" data-agent="Tarja">TARJA</button>
+  <button class="abtn" data-agent="Mie">MIE</button>
+</div>
+
+<div class="week-tabs" id="weekTabs"></div>
+<div id="schedules"></div>
+
+<div class="legend">
+  <div class="legend-item"><strong>Pause Avi:</strong> 13:00&ndash;13:30 dagligt</div>
+  <div class="legend-item"><strong>Pause Mie+Tarja:</strong> 12:00&ndash;12:30 dagligt</div>
+  <div class="legend-item"><strong>Mie:</strong> Altid man 15&ndash;16 &middot; Aldrig tirs 15&ndash;16</div>
+  <div class="legend-item"><strong>Fre 15&ndash;16:</strong> Avi &rarr; Tarja &rarr; Mie</div>
+  <div class="legend-item"><strong>Helligdag:</strong> Fri fra arbejde</div>
+</div>
+
+<script>
+(function() {
+  var WEEKS = [{"wi": 0, "wn": 9, "vp": 1, "label": "UGE 9", "range": "23/2 – 27/2", "days": [{"date": "23/2", "name": "Mandag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Mie", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]}, {"date": "24/2", "name": "Tirsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Mie"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}, {"date": "25/2", "name": "Onsdag", "isToday": true, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}, {"date": "26/2", "name": "Torsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}, {"date": "27/2", "name": "Fredag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja"]}, {"time": "14:30-15:00", "agents": ["Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}]}, {"wi": 1, "wn": 10, "vp": 2, "label": "UGE 10", "range": "2/3 – 6/3", "days": [{"date": "2/3", "name": "Mandag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Mie", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]}, {"date": "3/3", "name": "Tirsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Mie"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}, {"date": "4/3", "name": "Onsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}, {"date": "5/3", "name": "Torsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}, {"date": "6/3", "name": "Fredag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja"]}, {"time": "14:30-15:00", "agents": ["Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}]}, {"wi": 2, "wn": 11, "vp": 3, "label": "UGE 11", "range": "9/3 – 13/3", "days": [{"date": "9/3", "name": "Mandag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Mie", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]}, {"date": "10/3", "name": "Tirsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Mie"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}, {"date": "11/3", "name": "Onsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]}, {"date": "12/3", "name": "Torsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}, {"date": "13/3", "name": "Fredag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja"]}, {"time": "14:30-15:00", "agents": ["Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]}]}, {"wi": 3, "wn": 12, "vp": 1, "label": "UGE 12", "range": "16/3 – 20/3", "days": [{"date": "16/3", "name": "Mandag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Mie", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]}, {"date": "17/3", "name": "Tirsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Mie"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}, {"date": "18/3", "name": "Onsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}, {"date": "19/3", "name": "Torsdag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Mie", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}, {"date": "20/3", "name": "Fredag", "isToday": false, "isHoliday": false, "holName": "", "holIcon": "", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Mie"]}, {"time": "12:00-12:30", "isBreak": true, "label": "PAUSE — MIE & TARJA"}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "isBreak": true, "label": "PAUSE — AVI"}, {"time": "13:30-14:00", "agents": ["Avi", "Tarja"]}, {"time": "14:00-14:30", "agents": ["Tarja"]}, {"time": "14:30-15:00", "agents": ["Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}]}];
+
+  var AGENT_HL = { Avi:'#D4F5C4', Tarja:'#E8D5FF', Mie:'#FFD5E8' };
+  var TODAY_STR = '25.2.2026';
+  var TODAY_DAY = 'ONSDAG';
+
+  var activeWeek  = 0;
+  var activeAgent = '';
+
+  // Set today label
+  var tdEl = document.getElementById('todayDay');
+  var dtEl = document.getElementById('todayDate');
+  if (tdEl) tdEl.textContent = TODAY_DAY;
+  if (dtEl) dtEl.textContent = TODAY_STR;
+
+  // ── Build DOM ──────────────────────────────────────────────────────────────
+  function buildUI() {
+    var tabsEl = document.getElementById('weekTabs');
+    var schEl  = document.getElementById('schedules');
+    if (!tabsEl || !schEl) return;
+
+    for (var wi = 0; wi < WEEKS.length; wi++) {
+      (function(week) {
+        // Tab
+        var tab = document.createElement('div');
+        tab.className = 'wtab' + (week.wi === activeWeek ? ' active' : '');
+        tab.dataset.wi = week.wi;
+
+        var s1 = document.createElement('span'); s1.className = 'wt-main'; s1.textContent = week.label;
+        var s2 = document.createElement('span'); s2.className = 'wt-sub';  s2.textContent = week.range;
+        var s3 = document.createElement('span'); s3.className = 'wt-vp';   s3.textContent = 'VP' + week.vp;
+        tab.appendChild(s1); tab.appendChild(s2); tab.appendChild(s3);
+        tab.addEventListener('click', function() { activeWeek = week.wi; render(); });
+        tabsEl.appendChild(tab);
+
+        // Panel
+        var panel = document.createElement('div');
+        panel.className = 'schedule' + (week.wi === activeWeek ? ' visible' : '');
+        panel.id = 'week-' + week.wi;
+
+        var grid = document.createElement('div');
+        grid.className = 'day-grid';
+
+        for (var di = 0; di < week.days.length; di++) {
+          (function(day) {
+            var col = document.createElement('div');
+            col.className = 'day-col' + (day.isToday ? ' today' : '') + (day.isHoliday ? ' holiday' : '');
+
+            // Header
+            var hdr = document.createElement('div'); hdr.className = 'day-header';
+            var dn  = document.createElement('div'); dn.className  = 'day-name'; dn.textContent = day.name;
+            var dd  = document.createElement('div'); dd.className  = 'day-date'; dd.textContent = day.date;
+            hdr.appendChild(dn); hdr.appendChild(dd);
+            if (day.isHoliday) {
+              var hn = document.createElement('div'); hn.className = 'holiday-name'; hn.textContent = day.holName;
+              hdr.appendChild(hn);
+            }
+            if (day.isToday) {
+              var tp = document.createElement('div'); tp.className = 'today-pill'; tp.textContent = 'I DAG';
+              hdr.appendChild(tp);
+            }
+            col.appendChild(hdr);
+
+            if (day.isHoliday) {
+              var hb   = document.createElement('div'); hb.className   = 'holiday-body';
+              var hico = document.createElement('div'); hico.className = 'holiday-icon'; hico.textContent = day.holIcon;
+              var hoff = document.createElement('div'); hoff.className = 'holiday-off';  hoff.textContent = 'FRI DAG';
+              var hsub = document.createElement('div'); hsub.className = 'holiday-sub';  hsub.textContent = day.holName;
+              hb.appendChild(hico); hb.appendChild(hoff); hb.appendChild(hsub);
+              col.appendChild(hb);
+            } else {
+              for (var si = 0; si < day.slots.length; si++) {
+                var slot = day.slots[si];
+                var div  = document.createElement('div');
+                var tEl  = document.createElement('div'); tEl.className = 'slot-time'; tEl.textContent = slot.time;
+
+                if (slot.isBreak) {
+                  div.className = 'slot break-slot';
+                  var bl = document.createElement('div'); bl.className = 'break-label'; bl.textContent = slot.label;
+                  div.appendChild(tEl); div.appendChild(bl);
+                } else {
+                  div.className = 'slot ' + slot.agents.map(function(a){return 'has-'+a;}).join(' ');
+                  div.dataset.agents = slot.agents.join(',');
+                  var aEl = document.createElement('div'); aEl.className = 'slot-agents';
+                  for (var ai = 0; ai < slot.agents.length; ai++) {
+                    var tag = document.createElement('span');
+                    tag.className = 'agent-tag ' + slot.agents[ai];
+                    tag.textContent = slot.agents[ai].toUpperCase();
+                    aEl.appendChild(tag);
+                  }
+                  div.appendChild(tEl); div.appendChild(aEl);
+                }
+                col.appendChild(div);
+              }
+            }
+            grid.appendChild(col);
+          })(week.days[di]);
+        }
+
+        panel.appendChild(grid);
+        schEl.appendChild(panel);
+      })(WEEKS[wi]);
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function render() {
+    // Tabs
+    var tabs = document.querySelectorAll('.wtab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', parseInt(tabs[i].dataset.wi) === activeWeek);
+    }
+    // Panels
+    var panels = document.querySelectorAll('.schedule');
+    for (var i = 0; i < panels.length; i++) {
+      panels[i].classList.toggle('visible', i === activeWeek);
+    }
+
+    // Highlighting
+    var panel = document.getElementById('week-' + activeWeek);
+    if (!panel) return;
+    var slots = panel.querySelectorAll('.slot:not(.break-slot)');
+    for (var i = 0; i < slots.length; i++) {
+      var slot   = slots[i];
+      var agents = (slot.dataset.agents || '').split(',').filter(Boolean);
+      slot.classList.remove('highlighted','dimmed');
+      slot.style.removeProperty('--hl-bg');
+      var allTags = slot.querySelectorAll('.agent-tag');
+      for (var t = 0; t < allTags.length; t++) allTags[t].classList.remove('hl-agent');
+
+      if (activeAgent) {
+        var has = agents.indexOf(activeAgent) > -1;
+        if (has) {
+          slot.classList.add('highlighted');
+          slot.style.setProperty('--hl-bg', AGENT_HL[activeAgent] || '#C8E8A0');
+          var hlTags = slot.querySelectorAll('.agent-tag.' + activeAgent);
+          for (var t = 0; t < hlTags.length; t++) hlTags[t].classList.add('hl-agent');
+        } else {
+          slot.classList.add('dimmed');
+        }
+      }
+    }
+  }
+
+  // Agent buttons
+  var btns = document.querySelectorAll('.abtn');
+  for (var i = 0; i < btns.length; i++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        activeAgent = btn.getAttribute('data-agent');
+        for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
+        btn.classList.add('active');
+        render();
+      });
+    })(btns[i]);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { buildUI(); render(); });
+  } else {
+    buildUI(); render();
+  }
+})();
+</script>
+</body>
+</html>

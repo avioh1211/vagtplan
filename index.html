@@ -237,6 +237,20 @@
   .btn-accept.ready { opacity:1; pointer-events:auto; }
   .btn-accept.ready:hover { background:var(--today-glow); border-color:var(--today-glow); }
 
+  /* REGRET MODAL */
+  .btn-regret-opt {
+    width:100%; padding:0.7rem 1rem; border:3px solid var(--ink); border-radius:3px;
+    background:var(--cream); cursor:pointer; font-family:var(--display); font-size:1.1rem;
+    letter-spacing:0.07em; color:var(--ink); text-align:left; transition:all 0.15s;
+  }
+  .btn-regret-opt:hover { background:#f0f0e8; transform:translateX(3px); }
+  .btn-regret-opt#btnTakeBack { border-color:var(--absent-red); color:var(--absent-red); }
+  .btn-regret-opt#btnTakeBack:hover { background:var(--absent-red); color:white; }
+  .btn-regret-opt.btn-regret-give { border-color:var(--today-glow); color:var(--today-glow); }
+  .btn-regret-opt.btn-regret-give:hover { background:var(--today-glow); color:white; }
+  .regret-changed { outline:2.5px dashed var(--absent-red); outline-offset:-2px; }
+  .regret-changed::after { content:'↩'; position:absolute; right:0.4rem; top:50%; transform:translateY(-50%); font-size:0.75rem; color:var(--absent-red); opacity:0.7; }
+
   /* TOAST */
   .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(4rem); background:#1a1a1a; color:white; padding:0.75rem 1.5rem; border-radius:40px; font-size:0.55rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; z-index:200; transition:transform 0.3s ease, opacity 0.3s ease; opacity:0; pointer-events:none; white-space:nowrap; }
   .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
@@ -363,6 +377,46 @@
   </div>
 </div>
 
+<!-- REGRET MODAL -->
+<div class="modal-overlay" id="regretModal">
+  <div class="modal">
+    <div class="modal-header" style="background:#E05050;">
+      <div class="modal-title">FORTRYD BYTTE</div>
+      <button class="modal-close" id="regretClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info" id="regretSlotInfo">
+        <div class="modal-info-label">Vagt</div>
+        <div class="modal-info-val" id="regretSlotTime">—</div>
+        <div class="modal-info-sub" id="regretSlotDay">—</div>
+      </div>
+      <div style="display:flex;gap:0.7rem;margin-top:0.9rem;">
+        <div style="flex:1;background:#f8f8f2;border:2.5px solid #ccc;border-radius:3px;padding:0.6rem 0.8rem;">
+          <div style="font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;margin-bottom:0.3rem;">Originalt</div>
+          <div id="regretOrigAgents" style="display:flex;flex-wrap:wrap;gap:0.25rem;"></div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:1.2rem;opacity:0.4;">→</div>
+        <div style="flex:1;background:#f8f8f2;border:2.5px solid #ccc;border-radius:3px;padding:0.6rem 0.8rem;">
+          <div style="font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;margin-bottom:0.3rem;">Nuværende</div>
+          <div id="regretCurrAgents" style="display:flex;flex-wrap:wrap;gap:0.25rem;"></div>
+        </div>
+      </div>
+      <div class="modal-step" style="margin-top:1.1rem;">HVAD VIL DU GØRE?</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.6rem;">
+        <button class="btn-regret-opt" id="btnTakeBack">↩ TAG MIN VAGT TILBAGE</button>
+        <button class="btn-regret-opt btn-regret-give" id="btnGiveToOther">⇄ GIV TIL EN ANDEN</button>
+      </div>
+      <!-- Give-to-other sub-panel -->
+      <div id="regretGivePanel" style="display:none;margin-top:0.8rem;">
+        <div class="modal-step">VÆLG HVEM DER SKAL HAVE VAGTEN</div>
+        <div class="swap-options" id="regretGiveOptions" style="margin-top:0.5rem;"></div>
+        <button class="btn-accept" id="btnRegretConfirmGive" style="margin-top:0.8rem;width:100%;">BEKRÆFT ✓</button>
+      </div>
+      <button class="btn-cancel" id="btnRegretCancel" style="margin-top:0.8rem;width:100%;">ANNULLER</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -472,8 +526,17 @@ function buildUI(){
               if(!activeIam||absentMode) return;
               if(absentDays[week.wi+'-'+di]) return;
               var ags=(this.dataset.agents||'').split(',').filter(Boolean);
-              if(ags.indexOf(activeIam)===-1) return;
-              openSwap(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags});
+              var slotKey='swap_'+week.wi+'_'+di+'_'+si;
+              var hist=swapHistory[slotKey];
+              // If agent was originally on this slot but got swapped away → offer regret
+              if(ags.indexOf(activeIam)===-1){
+                if(hist && hist.originalAgents && hist.originalAgents.indexOf(activeIam)>-1){
+                  openRegret(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags,slotKey:slotKey,hist:hist});
+                }
+                return;
+              }
+              // Normal swap — but also show regret option if this slot was previously swapped
+              openSwap(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags,slotKey:slotKey,hist:hist});
             });
           }
           col.appendChild(div);
@@ -544,6 +607,15 @@ function render(){
     }
     if(activeIam&&!absentMode&&ags.indexOf(activeIam)>-1){
       slot.classList.add('swappable');
+    }
+    // Show regret indicator: agent was swapped off this slot
+    slot.classList.remove('regret-changed');
+    var sKey='swap_'+slot.dataset.wi+'_'+slot.dataset.di+'_'+slot.dataset.si;
+    if(activeIam&&!absentMode&&swapHistory[sKey]){
+      var sh=swapHistory[sKey];
+      if(sh.originalAgents&&sh.originalAgents.indexOf(activeIam)>-1&&ags.indexOf(activeIam)===-1){
+        slot.classList.add('regret-changed');
+      }
     }
   });
 }
@@ -654,16 +726,22 @@ function acceptSwap(){
   toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time, false);
   render();
 
-  // Save to Firebase
-  fbSaveSwap(wi, di, si, ags);
+  // Save to Firebase (pass original agents before swap)
+  fbSaveSwap(wi, di, si, ags, swapSlotData.agents);
 }
 
-function fbSaveSwap(wi, di, si, agents){
+function fbSaveSwap(wi, di, si, agents, originalAgents){
   if(!window._fbReady) return;
-  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet, fget=window._fbGet;
   var key = 'swap_'+wi+'_'+di+'_'+si;
-  fset(fdoc(db,'vagtplan','changes'), { [key]: { wi:wi, di:di, si:si, agents:agents, ts: Date.now() } }, {merge:true})
-    .catch(function(e){ console.error('Firebase save error',e); });
+  var docRef = fdoc(db,'vagtplan','changes');
+  // Only store originalAgents if this is the first swap (don't overwrite original on re-swap)
+  fget(docRef).then(function(snap){
+    var existing = snap.exists() ? snap.data()[key] : null;
+    var orig = (existing && existing.originalAgents) ? existing.originalAgents : originalAgents;
+    fset(docRef, { [key]: { wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts: Date.now() } }, {merge:true})
+      .catch(function(e){ console.error('Firebase save error',e); });
+  });
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('btnCancel').addEventListener('click',closeModal);
@@ -717,7 +795,140 @@ document.getElementById('wnavInput').addEventListener('keydown', function(e){
   if(e.key==='ArrowDown'){ e.preventDefault(); if(activeWeek>0){activeWeek--;render();updateNav();} }
 });
 
+// ── Regret / Fortryd ─────────────────────────────────────────────────────────
+var regretData = null; // {slotEl, time, dayName, slotKey, hist, currentAgents}
+var regretGiveTarget = '';
+
+function makeAgentTag(name){
+  var t=document.createElement('span');
+  t.className='agent-tag '+name;
+  t.textContent=name.toUpperCase();
+  return t;
+}
+
+function openRegret(slotEl, data){
+  regretData = data; regretGiveTarget = '';
+  document.getElementById('regretSlotTime').textContent = data.time;
+  document.getElementById('regretSlotDay').textContent  = data.dayName;
+
+  // Show original vs current agents
+  var origEl = document.getElementById('regretOrigAgents');
+  var currEl = document.getElementById('regretCurrAgents');
+  origEl.innerHTML=''; currEl.innerHTML='';
+  (data.hist.originalAgents||[]).forEach(function(a){ origEl.appendChild(makeAgentTag(a)); });
+  data.agents.forEach(function(a){ currEl.appendChild(makeAgentTag(a)); });
+
+  // Reset give panel
+  document.getElementById('regretGivePanel').style.display='none';
+  document.getElementById('btnRegretConfirmGive').classList.remove('ready');
+  document.getElementById('regretModal').classList.add('open');
+}
+
+function closeRegret(){
+  document.getElementById('regretModal').classList.remove('open');
+  regretData=null; regretGiveTarget='';
+}
+
+// Take back: restore the original agents for this agent's spot
+document.getElementById('btnTakeBack').addEventListener('click', function(){
+  if(!regretData) return;
+  var hist = regretData.hist;
+  var curr = regretData.agents.slice(); // current agents on slot
+
+  // Figure out: in the original, activeIam was there. In current they're not.
+  // We swap in activeIam in place of whoever took their spot.
+  // Strategy: restore the full original agents list
+  var newAgents = hist.originalAgents.slice();
+
+  var wi=hist.wi, di=hist.di, si=hist.si;
+  applySwap(wi, {di:di,si:si}, newAgents);
+  // Update WEEKS data
+  updateWeeksSlot(wi,di,si,newAgents);
+  closeRegret(); closeModal();
+  toast('Vagt gendannet til original ✓', false);
+  fbSaveSwap(wi, di, si, newAgents, hist.originalAgents);
+  // If newAgents === originalAgents, we can clear the swap record from history
+  if(JSON.stringify(newAgents.slice().sort())===JSON.stringify(hist.originalAgents.slice().sort())){
+    delete swapHistory['swap_'+wi+'_'+di+'_'+si];
+  }
+  render();
+});
+
+// Give to other: show agent picker
+document.getElementById('btnGiveToOther').addEventListener('click', function(){
+  if(!regretData) return;
+  var panel = document.getElementById('regretGivePanel');
+  panel.style.display = 'block';
+  var opts = document.getElementById('regretGiveOptions');
+  opts.innerHTML='';
+  regretGiveTarget='';
+  document.getElementById('btnRegretConfirmGive').classList.remove('ready');
+
+  // Show all agents except activeIam and those already on the slot
+  ALL_AGENTS.filter(function(a){ return a!==activeIam; }).forEach(function(agent){
+    var btn=document.createElement('button'); btn.className='swap-agent-btn'; btn.dataset.swap=agent;
+    var onSlot=regretData.agents.indexOf(agent)>-1;
+    btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(onSlot?'allerede på vagten':'ledig')+'</div>';
+    btn.addEventListener('click',function(){
+      regretGiveTarget=agent;
+      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){b.classList.remove('selected');});
+      btn.classList.add('selected');
+      var conf=document.getElementById('btnRegretConfirmGive');
+      conf.classList.add('ready'); conf.textContent='GIV TIL '+agent.toUpperCase()+' ✓';
+    });
+    opts.appendChild(btn);
+  });
+});
+
+// Confirm give-to-other
+document.getElementById('btnRegretConfirmGive').addEventListener('click', function(){
+  if(!regretData||!regretGiveTarget) return;
+  var hist=regretData.hist;
+  var curr=regretData.agents.slice();
+
+  // Replace whoever replaced activeIam with regretGiveTarget
+  // Find who is on the slot that wasn't originally there (the person who took activeIam's spot)
+  var newAgents=curr.slice();
+  // Find the "intruder" — someone on current slot not on original, or just use first non-original
+  var intruder=null;
+  for(var i=0;i<curr.length;i++){
+    if((hist.originalAgents||[]).indexOf(curr[i])===-1){ intruder=curr[i]; break; }
+  }
+  if(intruder){
+    var idx2=newAgents.indexOf(intruder);
+    if(idx2>-1) newAgents[idx2]=regretGiveTarget;
+  } else {
+    // Slot unchanged in structure — just add regretGiveTarget where activeIam was
+    // (shouldn't normally happen but be safe)
+    newAgents.push(regretGiveTarget);
+  }
+
+  var wi=hist.wi, di=hist.di, si=hist.si;
+  applySwap(wi,{di:di,si:si},newAgents);
+  updateWeeksSlot(wi,di,si,newAgents);
+  closeRegret(); closeModal();
+  toast('Vagt givet til '+regretGiveTarget+' ✓', false);
+  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents);
+  render();
+});
+
+document.getElementById('regretClose').addEventListener('click', closeRegret);
+document.getElementById('btnRegretCancel').addEventListener('click', closeRegret);
+document.getElementById('regretModal').addEventListener('click', function(e){ if(e.target===this) closeRegret(); });
+
+function updateWeeksSlot(wi,di,si,agents){
+  if(WEEKS[wi]&&WEEKS[wi].days[di]){
+    var slots=WEEKS[wi].days[di].slots;
+    var count=0;
+    for(var i=0;i<slots.length;i++){
+      if(!slots[i].isBreak){ if(count===si){slots[i].agents=agents;break;} count++; }
+    }
+  }
+}
+
 // ── Firebase sync ─────────────────────────────────────────────────────────────
+var swapHistory = {}; // key -> {wi,di,si,originalAgents,currentAgents}
+
 function applyAllChanges(data){
   if(!data) return;
   Object.keys(data).forEach(function(key){
@@ -725,6 +936,8 @@ function applyAllChanges(data){
     if(!val) return; // null = deleted
 
     if(key.indexOf('swap_')===0){
+      // Track history
+      swapHistory[key] = { wi:val.wi, di:val.di, si:val.si, originalAgents:val.originalAgents||val.agents, currentAgents:val.agents };
       // Apply swap
       applySwap(val.wi, {di:val.di, si:val.si}, val.agents);
       // Also update the WEEKS data so filter/highlight works correctly

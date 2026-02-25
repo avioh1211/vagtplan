@@ -253,13 +253,47 @@
   @media (max-width:560px) { .day-grid { grid-template-columns:1fr 1fr; } .masthead { grid-template-columns:1fr; } .mt-today { border-left:none; border-top:4px solid var(--ink); flex-direction:row; gap:1rem; } }
   @media (max-width:340px) { .day-grid { grid-template-columns:1fr; } }
 </style>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
+      authDomain: "vagtplan-fcaf8.firebaseapp.com",
+      projectId: "vagtplan-fcaf8",
+      storageBucket: "vagtplan-fcaf8.firebasestorage.app",
+      messagingSenderId: "1094720834219",
+      appId: "1:1094720834219:web:3e858649614a5393dac5ee"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // Expose db and helpers to main script via window
+    window._db = db;
+    window._fbDoc  = doc;
+    window._fbSet  = setDoc;
+    window._fbGet  = getDoc;
+    window._fbSnap = onSnapshot;
+    window._fbCol  = collection;
+    window._fbReady = true;
+
+    // Notify main script that Firebase is ready
+    window.dispatchEvent(new Event('firebaseReady'));
+  </script>
 </head>
 <body>
 
 <div class="masthead">
   <div class="mt">
     <h1>VAGT<span>PLAN</span></h1>
-    <div class="mt-sub">Agent Schedule Agent Schedule &middot; 3-Week Rotation &middot; 2026middot; Uge 9–27 Agent Schedule &middot; 3-Week Rotation &middot; 2026middot; 2026</div>
+    <div class="mt-sub">Agent Schedule &middot; Uge 9–27 &middot; 2026
+      <span style="display:inline-flex;align-items:center;gap:0.35rem;margin-left:0.8rem;">
+        <span id="syncDot" title="Forbinder..." style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#aaa;transition:background 0.5s;"></span>
+        <span style="font-size:0.45rem;letter-spacing:0.1em;">LIVE SYNC</span>
+      </span>
+    </div>
   </div>
   <div class="mt-today">
     <div class="today-label">↓ I DAG</div>
@@ -460,12 +494,23 @@ function doAbsent(wi,di,col){
     col.classList.remove('absent-day');
     var w=document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent='';
     toast('Fraværsmarkering fjernet',false);
+    fbSaveAbsent(wi,di,null);
   } else {
     absentDays[key]=activeIam;
     col.classList.add('absent-day');
     var w=document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent=activeIam.toUpperCase()+' — FRAVÆRENDE';
     toast(activeIam+' markeret fraværende',true);
+    fbSaveAbsent(wi,di,activeIam);
   }
+}
+
+function fbSaveAbsent(wi,di,agent){
+  if(!window._fbReady) return;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
+  var key = 'absent_'+wi+'_'+di;
+  var val = agent ? { wi:wi, di:di, agent:agent, ts:Date.now() } : null;
+  fset(fdoc(db,'vagtplan','changes'), { [key]: val }, {merge:true})
+    .catch(function(e){ console.error('Firebase absent error',e); });
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
@@ -577,17 +622,48 @@ function closeModal(){
   document.getElementById('swapModal').classList.remove('open');
   swapSlotEl=null; swapSlotData=null; swapTarget='';
 }
+function applySwap(wi, si, newAgents){
+  // Apply a swap visually given week index wi, slot element selector key, new agents array
+  var panel = document.getElementById('week-'+wi);
+  if(!panel) return;
+  var slots = panel.querySelectorAll('.slot:not(.break-slot)');
+  slots.forEach(function(slot){
+    if(slot.dataset.si === String(si.si) && slot.dataset.di === String(si.di) && slot.dataset.wi === String(wi)){
+      slot.dataset.agents = newAgents.join(',');
+      // rebuild classes
+      var allAgents = ['Avi','Tarja','Mie'];
+      allAgents.forEach(function(a){ slot.classList.remove('has-'+a); });
+      newAgents.forEach(function(a){ slot.classList.add('has-'+a); });
+      var aEl = slot.querySelector('.slot-agents');
+      if(aEl){ aEl.innerHTML=''; newAgents.forEach(function(a){ var t=document.createElement('span'); t.className='agent-tag '+a; t.textContent=a.toUpperCase(); aEl.appendChild(t); }); }
+    }
+  });
+}
+
 function acceptSwap(){
   if(!swapTarget||!swapSlotEl) return;
   var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
   var idx=ags.indexOf(activeIam); if(idx>-1) ags[idx]=swapTarget;
-  swapSlotEl.dataset.agents=ags.join(',');
-  swapSlotEl.classList.remove('has-'+activeIam); swapSlotEl.classList.add('has-'+swapTarget);
-  var aEl=swapSlotEl.querySelector('.slot-agents');
-  if(aEl){aEl.innerHTML='';ags.forEach(function(a){var t=document.createElement('span');t.className='agent-tag '+a;t.textContent=a.toUpperCase();aEl.appendChild(t);});}
+  var wi  = parseInt(swapSlotEl.dataset.wi);
+  var di  = parseInt(swapSlotEl.dataset.di);
+  var si  = parseInt(swapSlotEl.dataset.si);
+
+  // Apply locally
+  applySwap(wi, {di:di,si:si}, ags);
   closeModal();
-  toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time,false);
+  toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time, false);
   render();
+
+  // Save to Firebase
+  fbSaveSwap(wi, di, si, ags);
+}
+
+function fbSaveSwap(wi, di, si, agents){
+  if(!window._fbReady) return;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
+  var key = 'swap_'+wi+'_'+di+'_'+si;
+  fset(fdoc(db,'vagtplan','changes'), { [key]: { wi:wi, di:di, si:si, agents:agents, ts: Date.now() } }, {merge:true})
+    .catch(function(e){ console.error('Firebase save error',e); });
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('btnCancel').addEventListener('click',closeModal);
@@ -641,10 +717,65 @@ document.getElementById('wnavInput').addEventListener('keydown', function(e){
   if(e.key==='ArrowDown'){ e.preventDefault(); if(activeWeek>0){activeWeek--;render();updateNav();} }
 });
 
+// ── Firebase sync ─────────────────────────────────────────────────────────────
+function applyAllChanges(data){
+  if(!data) return;
+  Object.keys(data).forEach(function(key){
+    var val = data[key];
+    if(!val) return; // null = deleted
+
+    if(key.indexOf('swap_')===0){
+      // Apply swap
+      applySwap(val.wi, {di:val.di, si:val.si}, val.agents);
+      // Also update the WEEKS data so filter/highlight works correctly
+      if(WEEKS[val.wi] && WEEKS[val.wi].days[val.di]){
+        var slots = WEEKS[val.wi].days[val.di].slots;
+        var realSi = 0; var count = 0;
+        for(var i=0;i<slots.length;i++){
+          if(!slots[i].isBreak){ if(count===val.si){realSi=i;break;} count++; }
+        }
+        slots[realSi].agents = val.agents;
+      }
+    }
+
+    if(key.indexOf('absent_')===0){
+      // Apply absent day
+      var col = document.querySelector('.day-col[data-wi="'+val.wi+'"][data-di="'+val.di+'"]');
+      if(col){
+        absentDays[val.wi+'-'+val.di] = val.agent;
+        col.classList.add('absent-day');
+        var w = document.getElementById('abswho-'+val.wi+'-'+val.di);
+        if(w) w.textContent = val.agent.toUpperCase()+' — FRAVÆRENDE';
+      }
+    }
+  });
+  render();
+}
+
+function startFirebaseSync(){
+  if(!window._fbReady){ window.addEventListener('firebaseReady', startFirebaseSync, {once:true}); return; }
+  var db=window._db, fdoc=window._fbDoc, fsnap=window._fbSnap;
+  // Real-time listener — fires immediately with current data, then on every change
+  fsnap(fdoc(db,'vagtplan','changes'), function(snapshot){
+    if(snapshot.exists()){
+      applyAllChanges(snapshot.data());
+    }
+  }, function(err){ console.error('Firebase sync error', err); });
+}
+
+// Show sync status indicator
+function showSyncStatus(ok){
+  var el = document.getElementById('syncDot');
+  if(!el) return;
+  el.title = ok ? 'Forbundet til Firebase — ændringer synkroniseres live' : 'Ikke forbundet';
+  el.style.background = ok ? '#4CAF50' : '#E05050';
+}
+window.addEventListener('firebaseReady', function(){ showSyncStatus(true); });
+
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',function(){buildUI();render();updateNav();});
+  document.addEventListener('DOMContentLoaded',function(){buildUI();render();updateNav();startFirebaseSync();});
 } else {
-  buildUI();render();updateNav();
+  buildUI();render();updateNav();startFirebaseSync();
 }
 })();
 </script>

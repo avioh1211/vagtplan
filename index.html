@@ -267,12 +267,12 @@
   @media (max-width:340px) { .day-grid { grid-template-columns:1fr; } }
 </style>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
+  <!-- Firebase: loaded as classic scripts so they run synchronously
+       before the main script, avoiding the ES module defer timing bug -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    var firebaseConfig = {
       apiKey: "AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
       authDomain: "vagtplan-fcaf8.firebaseapp.com",
       projectId: "vagtplan-fcaf8",
@@ -281,18 +281,17 @@
       appId: "1:1094720834219:web:3e858649614a5393dac5ee"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    var _db = firebase.firestore();
 
-    window._db = db;
-    window._fbDoc  = doc;
-    window._fbSet  = setDoc;
-    window._fbGet  = getDoc;
-    window._fbSnap = onSnapshot;
-    window._fbCol  = collection;
+    // Wrap compat API to match the modular API surface the rest of the code uses
+    window._db     = _db;
+    window._fbDoc  = function(db, col, docId){ return db.collection(col).doc(docId); };
+    window._fbSet  = function(ref, data, opts){ return opts && opts.merge ? ref.set(data, {merge:true}) : ref.set(data); };
+    window._fbGet  = function(ref){ return ref.get(); };
+    window._fbSnap = function(ref, onNext, onError){ return ref.onSnapshot(onNext, onError); };
     window._fbReady = true;
-
-    window.dispatchEvent(new Event('firebaseReady'));
+    // No event needed — this script is synchronous, main script runs after
   </script>
 </head>
 <body>

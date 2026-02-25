@@ -63,14 +63,66 @@
   .iam-hint { font-size:0.48rem; letter-spacing:0.1em; color:rgba(255,255,255,0.3); margin-left:auto; font-style:italic; }
 
   /* WEEK TABS */
-  .week-tabs { background:var(--peach); border-bottom:4px solid var(--ink); display:flex; }
-  .wtab { flex:1; display:flex; flex-direction:column; align-items:center; gap:0.06rem; padding:0.55rem 0.5rem; border-right:3px solid var(--ink); cursor:pointer; transition:background 0.12s; border-bottom:4px solid transparent; margin-bottom:-4px; }
-  .wtab:last-child { border-right:none; }
-  .wtab:hover { background:color-mix(in srgb,var(--peach) 50%,white); }
-  .wtab.active { background:var(--sky); border-bottom:4px solid var(--ink); }
-  .wtab .wt-main { font-family:var(--display); font-size:1rem; letter-spacing:0.1em; color:var(--ink); }
-  .wtab .wt-sub  { font-size:0.44rem; font-weight:700; letter-spacing:0.07em; color:var(--ink); opacity:0.6; }
-  .wtab .wt-vp   { font-size:0.4rem; letter-spacing:0.04em; color:var(--lav-dark); opacity:0.8; }
+  /* WEEK NAVIGATOR */
+  .week-nav {
+    background: var(--peach);
+    border-bottom: 4px solid var(--ink);
+    display: flex;
+    align-items: stretch;
+    height: 64px;
+  }
+  .wnav-arrow {
+    flex: 0 0 72px;
+    background: transparent;
+    border: none;
+    border-right: 4px solid var(--ink);
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--ink);
+    transition: background 0.12s;
+    font-family: var(--mono);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wnav-arrow:last-child { border-right: none; border-left: 4px solid var(--ink); }
+  .wnav-arrow:hover { background: color-mix(in srgb, var(--peach) 60%, white); }
+  .wnav-arrow:disabled { opacity: 0.25; cursor: default; }
+  .wnav-center {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+  }
+  .wnav-label {
+    font-family: var(--display);
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    opacity: 0.45;
+  }
+  .wnav-input {
+    font-family: var(--display);
+    font-size: 2.4rem;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid var(--ink);
+    width: 4rem;
+    text-align: center;
+    outline: none;
+    padding: 0;
+    line-height: 1;
+    -moz-appearance: textfield;
+  }
+  .wnav-input::-webkit-outer-spin-button,
+  .wnav-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .wnav-input:focus { border-bottom-color: var(--today-glow); color: var(--today-glow); }
+  .wnav-range {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
 
   /* SCHEDULE */
   .schedule { display:none; animation:fadeIn 0.2s ease; }
@@ -207,7 +259,7 @@
 <div class="masthead">
   <div class="mt">
     <h1>VAGT<span>PLAN</span></h1>
-    <div class="mt-sub">Agent Schedule &middot; 3-Week Rotation &middot; 2026</div>
+    <div class="mt-sub">Agent Schedule Agent Schedule &middot; 3-Week Rotation &middot; 2026middot; Uge 9–27 Agent Schedule &middot; 3-Week Rotation &middot; 2026middot; 2026</div>
   </div>
   <div class="mt-today">
     <div class="today-label">↓ I DAG</div>
@@ -234,7 +286,15 @@
   <span class="iam-hint" id="iamHint">Vælg din rolle for at bytte vagter eller melde fra</span>
 </div>
 
-<div class="week-tabs" id="weekTabs"></div>
+<div class="week-nav">
+  <button class="wnav-arrow" id="wnavPrev">&#8592;</button>
+  <div class="wnav-center">
+    <div class="wnav-label">UGE</div>
+    <input class="wnav-input" id="wnavInput" type="number" min="9" max="27" value="9" />
+    <div class="wnav-range" id="wnavRange">—</div>
+  </div>
+  <button class="wnav-arrow" id="wnavNext">&#8594;</button>
+</div>
 <div id="schedules"></div>
 
 <div class="legend">
@@ -292,220 +352,11 @@
    Fri 15-16 rotation: UGE9=Tarja · UGE10=Avi · UGE11=Mie · UGE12=Tarja
 ═══════════════════════════════════════════════════════════════════ */
 
-var WEEKS = [
-{"wi":0,"wn":9,"vp":1,"label":"UGE 9","range":"23/2 – 27/2","days":[
-  {"date":"23/2","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"24/2","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Mie"]},
-    {"time":"14:30-15:00","agents":["Tarja","Mie"]},
-    {"time":"15:00-16:00","agents":["Avi"]}
-  ]},
-  {"date":"25/2","name":"Onsdag","isToday":true,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Avi"]},
-    {"time":"14:30-15:00","agents":["Tarja","Avi"]},
-    {"time":"15:00-16:00","agents":["Tarja"]}
-  ]},
-  {"date":"26/2","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"27/2","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja"]},
-    {"time":"14:30-15:00","agents":["Tarja"]},
-    {"time":"15:00-16:00","agents":["Tarja"]}
-  ]}
-]},
-{"wi":1,"wn":10,"vp":2,"label":"UGE 10","range":"2/3 – 6/3","days":[
-  {"date":"2/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"3/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Mie"]},
-    {"time":"14:30-15:00","agents":["Tarja","Mie"]},
-    {"time":"15:00-16:00","agents":["Tarja"]}
-  ]},
-  {"date":"4/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Avi"]},
-    {"time":"14:30-15:00","agents":["Tarja","Avi"]},
-    {"time":"15:00-16:00","agents":["Avi"]}
-  ]},
-  {"date":"5/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"6/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja"]},
-    {"time":"14:30-15:00","agents":["Tarja"]},
-    {"time":"15:00-16:00","agents":["Avi"]}
-  ]}
-]},
-{"wi":2,"wn":11,"vp":3,"label":"UGE 11 ★","range":"9/3 – 13/3","days":[
-  {"date":"9/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"10/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Mie"]},
-    {"time":"14:30-15:00","agents":["Tarja","Mie"]},
-    {"time":"15:00-16:00","agents":["Avi"]}
-  ]},
-  {"date":"11/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Avi"]},
-    {"time":"14:30-15:00","agents":["Tarja","Avi"]},
-    {"time":"15:00-16:00","agents":["Avi"]}
-  ]},
-  {"date":"12/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"13/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja"]},
-    {"time":"14:30-15:00","agents":["Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]}
-]},
-{"wi":3,"wn":12,"vp":1,"label":"UGE 12","range":"16/3 – 20/3","days":[
-  {"date":"16/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"17/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Mie"]},
-    {"time":"14:30-15:00","agents":["Tarja","Mie"]},
-    {"time":"15:00-16:00","agents":["Avi"]}
-  ]},
-  {"date":"18/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja","Avi"]},
-    {"time":"14:30-15:00","agents":["Tarja","Avi"]},
-    {"time":"15:00-16:00","agents":["Tarja"]}
-  ]},
-  {"date":"19/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Tarja"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},
-    {"time":"14:00-14:30","agents":["Mie","Tarja"]},
-    {"time":"14:30-15:00","agents":["Mie","Tarja"]},
-    {"time":"15:00-16:00","agents":["Mie"]}
-  ]},
-  {"date":"20/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[
-    {"time":"08:00-12:00","agents":["Avi","Mie"]},
-    {"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},
-    {"time":"12:30-13:00","agents":["Tarja","Mie"]},
-    {"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},
-    {"time":"13:30-14:00","agents":["Avi","Tarja"]},
-    {"time":"14:00-14:30","agents":["Tarja"]},
-    {"time":"14:30-15:00","agents":["Tarja"]},
-    {"time":"15:00-16:00","agents":["Tarja"]}
-  ]}
-]}
-];
+var WEEKS = [{"wi":0,"wn":9,"vp":1,"label":"UGE 9","range":"23/2 – 27/2","days":[{"date":"23/2","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/2","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/2","name":"Onsdag","isToday":true,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"26/2","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/2","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":1,"wn":10,"vp":2,"label":"UGE 10","range":"2/3 – 6/3","days":[{"date":"2/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"3/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"4/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"5/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"6/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":2,"wn":11,"vp":3,"label":"UGE 11","range":"9/3 – 13/3","days":[{"date":"9/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"10/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"11/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"12/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"13/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":3,"wn":12,"vp":1,"label":"UGE 12","range":"16/3 – 20/3","days":[{"date":"16/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"17/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"18/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"19/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"20/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":4,"wn":13,"vp":2,"label":"UGE 13","range":"23/3 – 27/3","days":[{"date":"23/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"25/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"26/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":5,"wn":14,"vp":3,"label":"UGE 14","range":"30/3 – 3/4","days":[{"date":"30/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"31/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"1/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"2/4","name":"Torsdag","isToday":false,"isHoliday":true,"holName":"Skærtorsdag","holIcon":"✝️","slots":[]},{"date":"3/4","name":"Fredag","isToday":false,"isHoliday":true,"holName":"Langfredag","holIcon":"✝️","slots":[]}]},{"wi":6,"wn":15,"vp":1,"label":"UGE 15","range":"6/4 – 10/4","days":[{"date":"6/4","name":"Mandag","isToday":false,"isHoliday":true,"holName":"2. Påskedag","holIcon":"🐣","slots":[]},{"date":"7/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"8/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"9/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"10/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":7,"wn":16,"vp":2,"label":"UGE 16","range":"13/4 – 17/4","days":[{"date":"13/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"14/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"15/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"16/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"17/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":8,"wn":17,"vp":3,"label":"UGE 17","range":"20/4 – 24/4","days":[{"date":"20/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"21/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"22/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"23/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":9,"wn":18,"vp":1,"label":"UGE 18","range":"27/4 – 1/5","days":[{"date":"27/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"28/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"29/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"30/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"1/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":10,"wn":19,"vp":2,"label":"UGE 19","range":"4/5 – 8/5","days":[{"date":"4/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"5/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"6/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"7/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"8/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":11,"wn":20,"vp":3,"label":"UGE 20","range":"11/5 – 15/5","days":[{"date":"11/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"12/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"13/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"14/5","name":"Torsdag","isToday":false,"isHoliday":true,"holName":"Kristi Himmelfartsdag","holIcon":"⛪","slots":[]},{"date":"15/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":12,"wn":21,"vp":1,"label":"UGE 21","range":"18/5 – 22/5","days":[{"date":"18/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"19/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"20/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"21/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"22/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":13,"wn":22,"vp":2,"label":"UGE 22","range":"25/5 – 29/5","days":[{"date":"25/5","name":"Mandag","isToday":false,"isHoliday":true,"holName":"2. Pinsedag","holIcon":"🕊️","slots":[]},{"date":"26/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"27/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"28/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"29/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":14,"wn":23,"vp":3,"label":"UGE 23","range":"1/6 – 5/6","days":[{"date":"1/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"2/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"3/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"4/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"5/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":15,"wn":24,"vp":1,"label":"UGE 24","range":"8/6 – 12/6","days":[{"date":"8/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"9/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"10/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"11/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"12/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":16,"wn":25,"vp":2,"label":"UGE 25","range":"15/6 – 19/6","days":[{"date":"15/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"16/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"17/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"18/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"19/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":17,"wn":26,"vp":3,"label":"UGE 26","range":"22/6 – 26/6","days":[{"date":"22/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"23/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"24/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"26/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":18,"wn":27,"vp":1,"label":"UGE 27","range":"29/6 – 1/7","days":[{"date":"29/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"30/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"1/7","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]}];
 
 var AGENT_HL   = {Avi:'#D4F5C4',Tarja:'#E8D5FF',Mie:'#FFD5E8'};
 var ALL_AGENTS = ['Avi','Tarja','Mie'];
-var activeWeek  = 0;
+var activeWeek  = 0; // auto-set to current week
 var activeAgent = '';
 var activeIam   = '';
 var absentMode  = false;
@@ -514,21 +365,10 @@ var swapSlotEl=null, swapSlotData=null, swapTarget='';
 
 // ── Build UI ─────────────────────────────────────────────────────────────────
 function buildUI(){
-  var tabsEl=document.getElementById('weekTabs');
   var schEl=document.getElementById('schedules');
 
   WEEKS.forEach(function(week){
-    // Tab
-    var tab=document.createElement('div');
-    tab.className='wtab'+(week.wi===activeWeek?' active':'');
-    tab.dataset.wi=week.wi;
-    [['wt-main',week.label],['wt-sub',week.range],['wt-vp','VP'+week.vp]].forEach(function(p){
-      var s=document.createElement('span'); s.className=p[0]; s.textContent=p[1]; tab.appendChild(s);
-    });
-    tab.addEventListener('click',function(){activeWeek=week.wi;render();});
-    tabsEl.appendChild(tab);
-
-    // Panel
+    // Panel (no tabs anymore - using navigator)
     var panel=document.createElement('div');
     panel.className='schedule'+(week.wi===activeWeek?' visible':'');
     panel.id='week-'+week.wi;
@@ -630,9 +470,7 @@ function doAbsent(wi,di,col){
 
 // ── Render ───────────────────────────────────────────────────────────────────
 function render(){
-  document.querySelectorAll('.wtab').forEach(function(t){
-    t.classList.toggle('active',parseInt(t.dataset.wi)===activeWeek);
-  });
+  // Navigator updated via updateNav()
   document.querySelectorAll('.schedule').forEach(function(p,i){
     p.classList.toggle('visible',i===activeWeek);
   });
@@ -765,8 +603,49 @@ function toast(msg,red){
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){buildUI();render();});}
-else{buildUI();render();}
+// ── Week Navigator ───────────────────────────────────────────────────────────
+var wnMap = {}; // iso_week → wi
+WEEKS.forEach(function(w){ wnMap[w.wn] = w.wi; });
+
+function updateNav(){
+  var week = WEEKS[activeWeek];
+  var input = document.getElementById('wnavInput');
+  var range  = document.getElementById('wnavRange');
+  var prev   = document.getElementById('wnavPrev');
+  var next   = document.getElementById('wnavNext');
+  if(input) input.value = week.wn;
+  if(range) range.textContent = week.range;
+  if(prev)  prev.disabled = (activeWeek <= 0);
+  if(next)  next.disabled = (activeWeek >= WEEKS.length - 1);
+}
+
+document.getElementById('wnavPrev').addEventListener('click', function(){
+  if(activeWeek > 0){ activeWeek--; render(); updateNav(); }
+});
+document.getElementById('wnavNext').addEventListener('click', function(){
+  if(activeWeek < WEEKS.length-1){ activeWeek++; render(); updateNav(); }
+});
+document.getElementById('wnavInput').addEventListener('change', function(){
+  var wn = parseInt(this.value);
+  if(wnMap[wn] !== undefined){
+    activeWeek = wnMap[wn]; render(); updateNav();
+  } else {
+    // clamp to nearest valid
+    var keys = Object.keys(wnMap).map(Number).sort(function(a,b){return a-b;});
+    var clamped = wn < keys[0] ? keys[0] : keys[keys.length-1];
+    activeWeek = wnMap[clamped]; render(); updateNav();
+  }
+});
+document.getElementById('wnavInput').addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp'){ e.preventDefault(); if(activeWeek<WEEKS.length-1){activeWeek++;render();updateNav();} }
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(activeWeek>0){activeWeek--;render();updateNav();} }
+});
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',function(){buildUI();render();updateNav();});
+} else {
+  buildUI();render();updateNav();
+}
 })();
 </script>
 </body>

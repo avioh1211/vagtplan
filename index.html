@@ -818,16 +818,16 @@ function acceptSwap(){
 
 function fbSaveSwap(wi, di, si, agents, originalAgents){
   if(!window._fbReady) return;
-  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet, fget=window._fbGet;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
   var key = 'swap_'+wi+'_'+di+'_'+si;
-  var docRef = fdoc(db,'vagtplan','changes');
-  // Only store originalAgents if this is the first swap (don't overwrite original on re-swap)
-  fget(docRef).then(function(snap){
-    var existing = snap.exists() ? snap.data()[key] : null;
-    var orig = (existing && existing.originalAgents) ? existing.originalAgents : originalAgents;
-    fset(docRef, { [key]: { wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts: Date.now() } }, {merge:true})
-      .catch(function(e){ console.error('Firebase save error',e); });
-  });
+  // Use swapHistory to preserve the original agents across multiple swaps
+  var orig = (swapHistory[key] && swapHistory[key].originalAgents)
+             ? swapHistory[key].originalAgents
+             : originalAgents;
+  fset(fdoc(db,'vagtplan','changes'), {
+    [key]: { wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts:Date.now() }
+  }, {merge:true})
+  .catch(function(e){ console.error('Firebase save error',e); });
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('btnCancel').addEventListener('click',closeModal);
@@ -1003,12 +1003,10 @@ document.getElementById('btnRegretCancel').addEventListener('click', closeRegret
 document.getElementById('regretModal').addEventListener('click', function(e){ if(e.target===this) closeRegret(); });
 
 function updateWeeksSlot(wi,di,si,agents){
+  // si is the raw slot array index (same as dataset.si)
   if(WEEKS[wi]&&WEEKS[wi].days[di]){
     var slots=WEEKS[wi].days[di].slots;
-    var count=0;
-    for(var i=0;i<slots.length;i++){
-      if(!slots[i].isBreak){ if(count===si){slots[i].agents=agents;break;} count++; }
-    }
+    if(slots[si]) slots[si].agents=agents;
   }
 }
 
@@ -1028,12 +1026,9 @@ function applyAllChanges(data){
       applySwap(val.wi, {di:val.di, si:val.si}, val.agents);
       // Also update the WEEKS data so filter/highlight works correctly
       if(WEEKS[val.wi] && WEEKS[val.wi].days[val.di]){
+        // val.si is the raw slot array index (same as dataset.si stored at build time)
         var slots = WEEKS[val.wi].days[val.di].slots;
-        var realSi = 0; var count = 0;
-        for(var i=0;i<slots.length;i++){
-          if(!slots[i].isBreak){ if(count===val.si){realSi=i;break;} count++; }
-        }
-        slots[realSi].agents = val.agents;
+        if(slots[val.si]) slots[val.si].agents = val.agents;
       }
     }
 

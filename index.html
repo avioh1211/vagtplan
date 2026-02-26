@@ -806,14 +806,18 @@ function acceptSwap(){
   var di  = parseInt(swapSlotEl.dataset.di);
   var si  = parseInt(swapSlotEl.dataset.si);
 
+  // Read from swapSlotData BEFORE closeModal() nulls it
+  var slotTime = swapSlotData.time;
+  var origAgents = swapSlotData.agents;
+
   // Apply locally
   applySwap(wi, {di:di,si:si}, ags);
   closeModal();
-  toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time, false);
+  toast('Byttet: '+activeIam+' → '+swapTarget+' · '+slotTime, false);
   render();
 
   // Save to Firebase (pass original agents before swap)
-  fbSaveSwap(wi, di, si, ags, swapSlotData.agents);
+  fbSaveSwap(wi, di, si, ags, origAgents);
 }
 
 function fbSaveSwap(wi, di, si, agents, originalAgents){

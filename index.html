@@ -1,380 +1,1014 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vagtplan 2026 - Live Sync</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --ink: #1a1a1a; --cream: #FFF9F2; --lavender: #C8B4E8; --lav-dark: #9B7FCC;
-            --sky: #A8CCEA; --sky-dark: #6FA8CC; --peach: #F5D5A8; --peach-dark:#D4A870;
-            --lime: #C8E8A0; --lime-dark: #85BB45; --holbg: #D4C4F0; --today-glow:#7B4FD4;
-            --absent-bg: #FFF0F0; --absent-red: #E05050; --changed-orange: #E67E22;
-            --display: 'Bebas Neue', Impact, 'Arial Black', sans-serif; --mono: 'DM Mono', monospace;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--cream); font-family:var(--mono); color: var(--ink); overflow-x:hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vagtplan 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:       #1a1a1a;
+    --cream:     #FFF9F2;
+    --lavender:  #C8B4E8;
+    --lav-dark:  #9B7FCC;
+    --sky:       #A8CCEA;
+    --sky-dark:  #6FA8CC;
+    --peach:     #F5D5A8;
+    --peach-dark:#D4A870;
+    --lime:      #C8E8A0;
+    --lime-dark: #85BB45;
+    --holbg:     #D4C4F0;
+    --today-glow:#7B4FD4;
+    --absent-bg: #FFF0F0;
+    --absent-red: #E05050;
+    --display:   'Bebas Neue', Impact, 'Arial Black', sans-serif;
+    --mono:      'DM Mono', 'Courier New', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; background:var(--cream); font-family:var(--mono); overflow-x:hidden; }
 
-        .masthead { background:var(--lavender); border-bottom:4px solid var(--ink); display:grid; grid-template-columns:1fr auto; }
-        .mt { padding:1.2rem; }
-        .mt h1 { font-family:var(--display); font-size:clamp(2.5rem, 7vw, 4.5rem); line-height:0.9; }
-        .mt h1 span { color: var(--lav-dark); }
-        .mt-sub { font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; opacity:0.6; margin-top:0.5rem; }
-        
-        .sync-box { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        #syncDot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; transition: 0.3s; }
+  /* MASTHEAD */
+  .masthead { background:var(--lavender); border-bottom:4px solid var(--ink); display:grid; grid-template-columns:1fr auto; align-items:stretch; }
+  .mt { padding:1.2rem 1.8rem; }
+  .mt h1 { font-family:var(--display); font-size:clamp(2.8rem,7vw,5.5rem); color:var(--ink); letter-spacing:0.03em; line-height:0.9; }
+  .mt h1 span { color:var(--lav-dark); }
+  .mt-sub { font-size:0.58rem; color:var(--ink); letter-spacing:0.18em; text-transform:uppercase; margin-top:0.5rem; opacity:0.6; }
+  .mt-today { background:var(--today-glow); border-left:4px solid var(--ink); padding:1rem 1.6rem; display:flex; flex-direction:column; justify-content:center; align-items:center; min-width:160px; position:relative; overflow:hidden; }
+  .mt-today::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,0.07) 8px,rgba(255,255,255,0.07) 16px); }
+  .mt-today .today-label { font-size:0.5rem; font-weight:700; letter-spacing:0.2em; color:rgba(255,255,255,0.7); text-transform:uppercase; margin-bottom:0.3rem; position:relative; }
+  .mt-today .tday { font-family:var(--display); font-size:2.2rem; letter-spacing:0.05em; color:white; position:relative; }
+  .mt-today .tdate { font-size:0.65rem; font-weight:700; letter-spacing:0.12em; color:white; margin-top:0.25rem; opacity:0.85; position:relative; }
 
-        .controls, .iam-bar { padding: 0.8rem 1.2rem; border-bottom: 4px solid var(--ink); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .iam-bar { background: #1a1a1a; color: white; }
-        
-        .abtn, .iam-btn { font-family:var(--display); font-size: 1.1rem; padding: 5px 18px; border: 3px solid var(--ink); border-radius: 40px; cursor: pointer; background: white; color: var(--ink); }
-        .iam-btn { background: transparent; color: rgba(255,255,255,0.5); border-color: #444; }
-        .iam-btn.active { background: white; color: var(--ink); border-color: white; }
-        .abtn.active { background: var(--ink); color: white; }
+  /* CONTROLS */
+  .controls { background:var(--cream); border-bottom:4px solid var(--ink); display:flex; flex-wrap:wrap; align-items:center; padding:0.7rem 1.5rem; gap:0.5rem; }
+  .controls-label { font-size:0.5rem; letter-spacing:0.18em; text-transform:uppercase; opacity:0.45; margin-right:0.2rem; }
+  .abtn { font-family:var(--display); font-size:1.15rem; letter-spacing:0.08em; padding:0.3rem 1.2rem; border:3px solid var(--ink); border-radius:40px; cursor:pointer; background:transparent; color:var(--ink); transition:all 0.15s; }
+  .abtn:hover { opacity:0.75; }
+  .abtn.active { background:var(--ink); color:var(--cream); }
+  .abtn[data-agent="Avi"].active   { background:var(--lime);     color:var(--ink); border-color:var(--lime-dark); }
+  .abtn[data-agent="Tarja"].active { background:var(--lavender); color:var(--ink); border-color:var(--lav-dark); }
+  .abtn[data-agent="Mie"].active   { background:var(--peach);    color:var(--ink); border-color:var(--peach-dark); }
 
-        .week-nav { background: var(--peach); border-bottom: 4px solid var(--ink); display: flex; align-items: stretch; height: 60px; }
-        .wnav-arrow { width: 70px; border: none; border-right: 4px solid var(--ink); background: transparent; font-size: 1.8rem; cursor: pointer; }
-        .wnav-arrow:last-child { border-right: none; border-left: 4px solid var(--ink); }
-        .wnav-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; }
-        .wnav-input { font-family: var(--display); font-size: 2.2rem; width: 60px; text-align: center; background: transparent; border: none; border-bottom: 3px solid var(--ink); outline: none; pointer-events: none; }
+  /* IAM BAR */
+  .iam-bar { background:#1a1a1a; border-bottom:4px solid var(--ink); display:flex; flex-wrap:wrap; align-items:center; padding:0.6rem 1.5rem; gap:0.5rem; }
+  .iam-label { font-size:0.5rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-right:0.2rem; }
+  .iam-btn { font-family:var(--display); font-size:1.05rem; letter-spacing:0.08em; padding:0.25rem 1rem; border:2.5px solid rgba(255,255,255,0.3); border-radius:40px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.6); transition:all 0.15s; }
+  .iam-btn:hover { border-color:white; color:white; }
+  .iam-btn.active { background:white; color:var(--ink); border-color:white; }
+  .iam-sep { width:1px; height:1.4rem; background:rgba(255,255,255,0.2); margin:0 0.4rem; }
+  .absent-btn { font-family:var(--display); font-size:0.95rem; letter-spacing:0.08em; padding:0.25rem 1rem; border:2.5px solid rgba(229,80,80,0.5); border-radius:40px; cursor:pointer; background:transparent; color:rgba(229,80,80,0.75); transition:all 0.15s; display:none; }
+  .absent-btn.visible { display:inline-block; }
+  .absent-btn:hover { border-color:var(--absent-red); color:var(--absent-red); }
+  .absent-btn.active { background:var(--absent-red); color:white; border-color:var(--absent-red); }
+  .iam-hint { font-size:0.48rem; letter-spacing:0.1em; color:rgba(255,255,255,0.3); margin-left:auto; font-style:italic; }
 
-        .hours-bar { background: var(--ink); color: white; padding: 10px 20px; border-bottom: 4px solid var(--ink); display: flex; justify-content: space-around; font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.05em; }
-        .hours-bar span { opacity: 0.8; }
-        .hours-bar b { color: var(--lime); font-size: 1.4rem; margin-left: 5px; opacity: 1; }
+  /* WEEK TABS */
+  /* WEEK NAVIGATOR */
+  .week-nav {
+    background: var(--peach);
+    border-bottom: 4px solid var(--ink);
+    display: flex;
+    align-items: stretch;
+    height: 64px;
+  }
+  .wnav-arrow {
+    flex: 0 0 72px;
+    background: transparent;
+    border: none;
+    border-right: 4px solid var(--ink);
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--ink);
+    transition: background 0.12s;
+    font-family: var(--mono);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wnav-arrow:last-child { border-right: none; border-left: 4px solid var(--ink); }
+  .wnav-arrow:hover { background: color-mix(in srgb, var(--peach) 60%, white); }
+  .wnav-arrow:disabled { opacity: 0.25; cursor: default; }
+  .wnav-center {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+  }
+  .wnav-label {
+    font-family: var(--display);
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    opacity: 0.45;
+  }
+  .wnav-input {
+    font-family: var(--display);
+    font-size: 2.4rem;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid var(--ink);
+    width: 4rem;
+    text-align: center;
+    outline: none;
+    padding: 0;
+    line-height: 1;
+    -moz-appearance: textfield;
+  }
+  .wnav-input::-webkit-outer-spin-button,
+  .wnav-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .wnav-input:focus { border-bottom-color: var(--today-glow); color: var(--today-glow); }
+  .wnav-range {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
 
-        .day-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-left: 4px solid var(--ink); width: 100%; }
-        .day-col { border-right: 4px solid var(--ink); border-bottom: 4px solid var(--ink); background: var(--cream); min-height: 450px; position: relative; }
-        .day-header { padding: 12px; border-bottom: 4px solid var(--ink); background: var(--sky); display: flex; flex-direction: column; gap: 5px; }
-        .day-col.today { background: #FAF5FF; box-shadow: inset 0 0 0 3px var(--today-glow); z-index: 1; }
-        .day-col.today .day-header { background: var(--today-glow); color: white; }
-        .day-name { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.05em; line-height: 1; }
-        .day-date { font-size: 0.6rem; font-weight: bold; opacity: 0.7; }
+  /* SCHEDULE */
+  .schedule { display:none; animation:fadeIn 0.2s ease; }
+  .schedule.visible { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);} }
 
-        .day-free-btn { background: white; color: var(--ink); border: 2px solid var(--ink); padding: 4px 8px; font-family: var(--display); font-size: 0.8rem; cursor: pointer; border-radius: 4px; align-self: flex-start; }
-        .day-free-btn:hover { background: var(--absent-red); color: white; border-color: var(--absent-red); }
+  /* GRID */
+  .day-grid { display:grid; grid-template-columns:repeat(5,1fr); border-top:4px solid var(--ink); border-left:4px solid var(--ink); width:100%; }
+  .day-col { border-right:4px solid var(--ink); border-bottom:4px solid var(--ink); display:flex; flex-direction:column; background:var(--cream); min-width:0; transition:background 0.2s, box-shadow 0.2s; }
+  .day-col.today { background:#FAF5FF; box-shadow:inset 0 0 0 3px var(--today-glow); position:relative; z-index:1; }
 
-        .slot { padding: 12px; border-bottom: 2px solid rgba(0,0,0,0.05); position: relative; }
-        .slot-time { font-size: 0.7rem; font-weight: bold; opacity: 0.5; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
-        .agent-tag { font-family: var(--display); font-size: 1rem; padding: 2px 8px; border: 2px solid currentColor; border-radius: 3px; margin-right: 4px; display: inline-block; margin-bottom: 2px; }
-        .agent-tag.Avi { color: #2A7A2A; } .agent-tag.Tarja { color: #5533AA; } .agent-tag.Mie { color: #BB2277; }
-        .agent-tag.is-absent { opacity: 0.6; text-decoration: line-through; border-style: dashed; font-size: 0.85rem; }
-        
-        .changed-badge { background: var(--changed-orange); color: white; font-family: var(--display); font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; opacity: 1 !important; }
+  /* ABSENT DAY */
+  .day-col.absent-day { background:var(--absent-bg) !important; box-shadow:inset 0 0 0 3px var(--absent-red) !important; }
+  .day-col.absent-day .day-header { background:var(--absent-red) !important; }
+  .day-col.absent-day .day-name,
+  .day-col.absent-day .day-date { color:white !important; opacity:1 !important; }
+  .day-col.absent-day .today-pill { background:white; color:var(--absent-red); }
+  .day-col.absent-day .slot { display:none !important; }
+  .absent-overlay { display:none; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem 0.5rem; gap:0.5rem; flex:1; background:repeating-linear-gradient(-45deg,transparent,transparent 8px,rgba(224,80,80,0.05) 8px,rgba(224,80,80,0.05) 16px); }
+  .day-col.absent-day .absent-overlay { display:flex; }
+  .absent-icon { font-size:2.2rem; }
+  .absent-text { font-family:var(--display); font-size:1.1rem; letter-spacing:0.1em; color:var(--absent-red); }
+  .absent-who  { font-size:0.48rem; font-weight:700; letter-spacing:0.12em; color:var(--absent-red); opacity:0.7; text-transform:uppercase; }
+  .absent-undo { margin-top:0.5rem; font-size:0.44rem; font-weight:700; letter-spacing:0.1em; color:var(--absent-red); text-transform:uppercase; cursor:pointer; border:1.5px solid var(--absent-red); border-radius:20px; padding:0.15rem 0.65rem; background:white; transition:all 0.15s; }
+  .absent-undo:hover { background:var(--absent-red); color:white; }
 
-        .slot.swappable { cursor: pointer; }
-        .slot.swappable:hover { background: rgba(123, 79, 212, 0.1); }
-        .slot.highlighted { background: var(--hl-color) !important; }
-        .slot.dimmed { opacity: 0.15; }
+  /* ABSENT MODE: entire column is clickable */
+  .absent-mode .day-col:not(.holiday):not(.absent-day) { cursor: pointer; }
+  .absent-mode .day-col:not(.holiday):not(.absent-day):hover { outline: 3px dashed var(--absent-red); outline-offset: -3px; background: rgba(224,80,80,0.04); }
+  .absent-mode .day-col:not(.holiday):not(.absent-day):hover .day-header { background: rgba(224,80,80,0.15) !important; }
+  .absent-mode .day-col:not(.holiday):not(.absent-day):hover .day-name::after { content: ' — KLIK FOR AT MELDE FRA'; font-size: 0.5rem; opacity: 0.6; letter-spacing: 0.05em; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; }
-        .modal-overlay.open { display: flex; }
-        .modal { background: var(--cream); border: 4px solid var(--ink); padding: 25px; width: 90%; max-width: 400px; box-shadow: 10px 10px 0 var(--ink); }
-        .modal-h2 { font-family: var(--display); font-size: 2rem; margin-bottom: 15px; }
-        .swap-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: 3px solid var(--ink); font-family: var(--display); font-size: 1.3rem; cursor: pointer; background: white; }
-        .swap-btn:hover { background: var(--ink); color: white; }
-        .swap-btn.undo-btn { border-color: var(--absent-red); color: var(--absent-red); margin-top: 15px; }
-        .swap-btn.undo-btn:hover { background: var(--absent-red); color: white; }
+  /* ABSENT MODE: show mark button in day headers (kept as visual hint) */
+  .absent-mode-btn { display:none; margin-top:0.35rem; font-size:0.4rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(224,80,80,0.8); cursor:pointer; border:1.5px solid rgba(224,80,80,0.45); border-radius:20px; padding:0.1rem 0.5rem; background:white; transition:all 0.15s; }
+  .absent-mode .absent-mode-btn { display:inline-block; }
+  .day-col.absent-day .absent-mode-btn { display:none !important; }
+  .absent-mode-btn:hover { background:var(--absent-red); color:white; border-color:var(--absent-red); }
 
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 25px; border-radius: 40px; font-size: 0.8rem; display: none; z-index: 1000; }
+  /* DAY HEADER */
+  .day-header { background:var(--sky); border-bottom:4px solid var(--ink); padding:0.65rem 0.8rem; flex-shrink:0; transition:background 0.2s; }
+  .day-col.today .day-header { background:var(--today-glow); }
+  .day-col.holiday .day-header { background:var(--holbg); }
+  .day-name { font-family:var(--display); font-size:clamp(0.85rem,1.4vw,1.2rem); letter-spacing:0.05em; color:var(--ink); }
+  .day-col.today .day-name { color:white; }
+  .day-date { font-size:0.5rem; font-weight:700; letter-spacing:0.1em; margin-top:0.12rem; color:var(--ink); opacity:0.6; }
+  .day-col.today .day-date { color:rgba(255,255,255,0.75); opacity:1; }
+  .today-pill { display:inline-block; background:white; color:var(--today-glow); font-size:0.44rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; padding:0.12rem 0.5rem; border-radius:20px; margin-top:0.3rem; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.7;} }
+  .holiday-name { font-size:0.44rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; margin-top:0.18rem; color:var(--lav-dark); line-height:1.3; }
 
-        @media (max-width: 850px) { .day-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 550px) { .day-grid { grid-template-columns: 1fr; } .hours-bar { flex-direction: column; align-items: center; gap: 5px; } }
-    </style>
+  /* HOLIDAY */
+  .day-col.holiday .slot { display:none; }
+  .holiday-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem 0.5rem; gap:0.4rem; background:var(--holbg); }
+  .holiday-off { font-family:var(--display); font-size:1rem; letter-spacing:0.1em; color:var(--lav-dark); }
+  .holiday-sub { font-size:0.42rem; color:var(--ink); letter-spacing:0.08em; text-align:center; opacity:0.55; text-transform:uppercase; }
+
+  /* SLOTS */
+  .slot { padding:0.55rem 0.75rem; border-bottom:3px solid var(--ink); background:var(--cream); flex-shrink:0; transition:background-color 0.15s; position:relative; }
+  .slot:last-child { border-bottom:none; }
+  .day-col.today .slot { background:rgba(250,245,255,0.8); }
+  .day-col.today .slot.break-slot { border-left:4px solid var(--today-glow); padding-left:0.5rem; }
+  .slot-time { font-size:0.7rem; font-weight:700; letter-spacing:0.04em; color:var(--ink); opacity:0.65; margin-bottom:0.35rem; text-transform:uppercase; }
+  .day-col.today .slot-time { opacity:0.85; color:var(--today-glow); }
+  .slot-agents { display:flex; flex-wrap:wrap; gap:0.25rem; }
+  .agent-tag { font-family:var(--display); font-size:clamp(0.75rem,1.15vw,1rem); letter-spacing:0.06em; padding:0.04rem 0.45rem; border:2.5px solid currentColor; border-radius:3px; text-transform:uppercase; white-space:nowrap; transition:opacity 0.15s; }
+  .agent-tag.Avi   { color:#2A7A2A; background:rgba(100,200,80,0.15); }
+  .agent-tag.Tarja { color:#5533AA; background:rgba(150,100,220,0.15); }
+  .agent-tag.Mie   { color:#BB2277; background:rgba(220,80,150,0.15); }
+
+  /* BREAKS */
+  .slot.break-slot { background-color:#EDE8F8; background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(0,0,0,0.05) 4px,rgba(0,0,0,0.05) 8px); }
+  .slot.break-slot .slot-time { opacity:0.35; }
+  .break-label { font-size:0.48rem; font-weight:700; letter-spacing:0.07em; color:var(--ink); opacity:0.45; text-transform:uppercase; }
+
+  /* HIGHLIGHT */
+  .slot.highlighted { background-color:var(--hl-bg,#C8E8A0) !important; background-image:none !important; }
+  .slot.dimmed .agent-tag { opacity:0.1; }
+  .slot.dimmed .agent-tag.hl-agent { opacity:1; }
+
+  /* SWAP MODE */
+  .slot.swappable { cursor:pointer; outline:2.5px dashed var(--today-glow); outline-offset:-2px; }
+  .slot.swappable:hover { background:rgba(123,79,212,0.08) !important; }
+  .slot.swappable::after { content:'⇄'; position:absolute; right:0.4rem; top:50%; transform:translateY(-50%); font-size:0.75rem; color:var(--today-glow); opacity:0.55; }
+
+  /* SWAP MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(26,26,26,0.7); backdrop-filter:blur(4px); z-index:100; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; animation:modalIn 0.2s ease; }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);} }
+  .modal { background:var(--cream); border:4px solid var(--ink); border-radius:4px; width:min(480px,94vw); overflow:hidden; box-shadow:8px 8px 0 var(--ink); }
+  .modal-header { background:var(--today-glow); padding:1rem 1.4rem; display:flex; align-items:center; justify-content:space-between; }
+  .modal-title { font-family:var(--display); font-size:1.6rem; letter-spacing:0.06em; color:white; }
+  .modal-close { background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); color:white; font-size:1rem; width:2rem; height:2rem; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; transition:background 0.15s; }
+  .modal-close:hover { background:rgba(255,255,255,0.35); }
+  .modal-body { padding:1.4rem; }
+  .modal-info { background:var(--lavender); border:2.5px solid var(--lav-dark); border-radius:3px; padding:0.65rem 1rem; margin-bottom:1rem; }
+  .modal-info-label { font-size:0.44rem; letter-spacing:0.14em; text-transform:uppercase; opacity:0.55; margin-bottom:0.3rem; }
+  .modal-info-val { font-family:var(--display); font-size:1.3rem; letter-spacing:0.05em; color:var(--ink); }
+  .modal-info-sub { font-size:0.5rem; opacity:0.6; margin-top:0.15rem; }
+  .modal-step { font-size:0.5rem; letter-spacing:0.14em; text-transform:uppercase; opacity:0.5; margin-bottom:0.6rem; margin-top:0.9rem; }
+  .swap-options { display:flex; gap:0.6rem; }
+  .swap-agent-btn { flex:1; padding:0.75rem 0.5rem; border:3px solid var(--ink); border-radius:4px; cursor:pointer; background:var(--cream); font-family:var(--display); font-size:1.3rem; letter-spacing:0.08em; color:var(--ink); transition:all 0.15s; text-align:center; }
+  .swap-agent-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:4px 4px 0 var(--ink); }
+  .swap-agent-btn.selected { transform:translateY(-2px); box-shadow:4px 4px 0 var(--ink); }
+  .swap-agent-btn[data-swap="Avi"].selected   { background:var(--lime);     border-color:var(--lime-dark); }
+  .swap-agent-btn[data-swap="Tarja"].selected { background:var(--lavender); border-color:var(--lav-dark); }
+  .swap-agent-btn[data-swap="Mie"].selected   { background:var(--peach);    border-color:var(--peach-dark); }
+  .swap-agent-sub { font-size:0.42rem; font-family:var(--mono); opacity:0.5; margin-top:0.15rem; }
+  .modal-actions { display:flex; gap:0.6rem; margin-top:1.2rem; }
+  .btn-cancel { flex:1; padding:0.65rem; border:3px solid var(--ink); border-radius:3px; background:transparent; cursor:pointer; font-family:var(--display); font-size:1.1rem; letter-spacing:0.06em; color:var(--ink); transition:all 0.15s; }
+  .btn-cancel:hover { background:rgba(0,0,0,0.06); }
+  .btn-accept { flex:2; padding:0.65rem; border:3px solid var(--ink); border-radius:3px; background:var(--ink); cursor:pointer; font-family:var(--display); font-size:1.1rem; letter-spacing:0.06em; color:var(--cream); opacity:0.35; pointer-events:none; transition:all 0.15s; }
+  .btn-accept.ready { opacity:1; pointer-events:auto; }
+  .btn-accept.ready:hover { background:var(--today-glow); border-color:var(--today-glow); }
+
+  /* REGRET MODAL */
+  .btn-regret-opt {
+    width:100%; padding:0.7rem 1rem; border:3px solid var(--ink); border-radius:3px;
+    background:var(--cream); cursor:pointer; font-family:var(--display); font-size:1.1rem;
+    letter-spacing:0.07em; color:var(--ink); text-align:left; transition:all 0.15s;
+  }
+  .btn-regret-opt:hover { background:#f0f0e8; transform:translateX(3px); }
+  .btn-regret-opt#btnTakeBack { border-color:var(--absent-red); color:var(--absent-red); }
+  .btn-regret-opt#btnTakeBack:hover { background:var(--absent-red); color:white; }
+  .btn-regret-opt.btn-regret-give { border-color:var(--today-glow); color:var(--today-glow); }
+  .btn-regret-opt.btn-regret-give:hover { background:var(--today-glow); color:white; }
+  .regret-changed { outline:2.5px dashed var(--absent-red); outline-offset:-2px; }
+  .regret-changed::after { content:'↩'; position:absolute; right:0.4rem; top:50%; transform:translateY(-50%); font-size:0.75rem; color:var(--absent-red); opacity:0.7; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(4rem); background:#1a1a1a; color:white; padding:0.75rem 1.5rem; border-radius:40px; font-size:0.55rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; z-index:200; transition:transform 0.3s ease, opacity 0.3s ease; opacity:0; pointer-events:none; white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+  .toast.red { background:var(--absent-red); }
+
+  /* LEGEND */
+  .legend { background:var(--sky); border-top:4px solid var(--ink); padding:0.65rem 1.5rem; display:flex; flex-wrap:wrap; gap:1.2rem; align-items:center; }
+  .legend-item { font-size:0.48rem; letter-spacing:0.09em; color:var(--ink); text-transform:uppercase; opacity:0.7; }
+  .legend-item strong { opacity:1; }
+  .legend-item.rule-mie { color:#BB2277; opacity:1; }
+
+  /* RESPONSIVE */
+  @media (max-width:860px) { .day-grid { grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:560px) { .day-grid { grid-template-columns:1fr 1fr; } .masthead { grid-template-columns:1fr; } .mt-today { border-left:none; border-top:4px solid var(--ink); flex-direction:row; gap:1rem; } }
+  @media (max-width:340px) { .day-grid { grid-template-columns:1fr; } }
+</style>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
+      authDomain: "vagtplan-fcaf8.firebaseapp.com",
+      projectId: "vagtplan-fcaf8",
+      storageBucket: "vagtplan-fcaf8.firebasestorage.app",
+      messagingSenderId: "1094720834219",
+      appId: "1:1094720834219:web:3e858649614a5393dac5ee"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // Expose db and helpers to main script via window
+    window._db = db;
+    window._fbDoc  = doc;
+    window._fbSet  = setDoc;
+    window._fbGet  = getDoc;
+    window._fbSnap = onSnapshot;
+    window._fbCol  = collection;
+    window._fbReady = true;
+
+    // Notify main script that Firebase is ready
+    window.dispatchEvent(new Event('firebaseReady'));
+  </script>
 </head>
 <body>
 
 <div class="masthead">
-    <div class="mt">
-        <h1>VAGT<span>PLAN</span></h1>
-        <div class="mt-sub">Agent Schedule 2026 • Live Sync</div>
-        <div class="sync-box">
-            <div id="syncDot"></div>
-            <span id="syncStatus" style="font-size: 0.5rem; font-weight: bold;">AFBRUDT</span>
-        </div>
+  <div class="mt">
+    <h1>VAGT<span>PLAN</span></h1>
+    <div class="mt-sub">Agent Schedule &middot; Uge 9–27 &middot; 2026
+      <span style="display:inline-flex;align-items:center;gap:0.35rem;margin-left:0.8rem;">
+        <span id="syncDot" title="Forbinder..." style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#aaa;transition:background 0.5s;"></span>
+        <span style="font-size:0.45rem;letter-spacing:0.1em;">LIVE SYNC</span>
+      </span>
     </div>
+  </div>
+  <div class="mt-today">
+    <div class="today-label">↓ I DAG</div>
+    <div class="tday">ONSDAG</div>
+    <div class="tdate">25.2.2026</div>
+  </div>
 </div>
 
 <div class="controls">
-    <span style="font-size:0.5rem; opacity:0.5;">FILTER:</span>
-    <button class="abtn active" data-filter="">ALLE</button>
-    <button class="abtn" data-filter="Avi">AVI</button>
-    <button class="abtn" data-filter="Tarja">TARJA</button>
-    <button class="abtn" data-filter="Mie">MIE</button>
+  <span class="controls-label">FILTER</span>
+  <button class="abtn active" data-agent="">ALLE</button>
+  <button class="abtn" data-agent="Avi">AVI</button>
+  <button class="abtn" data-agent="Tarja">TARJA</button>
+  <button class="abtn" data-agent="Mie">MIE</button>
 </div>
 
 <div class="iam-bar">
-    <span style="font-size:0.5rem; opacity:0.5;">JEG ER:</span>
-    <button class="iam-btn" data-iam="Avi">AVI</button>
-    <button class="iam-btn" data-iam="Tarja">TARJA</button>
-    <button class="iam-btn" data-iam="Mie">MIE</button>
+  <span class="iam-label">JEG ER →</span>
+  <button class="iam-btn" data-iam="Avi">AVI</button>
+  <button class="iam-btn" data-iam="Tarja">TARJA</button>
+  <button class="iam-btn" data-iam="Mie">MIE</button>
+  <div class="iam-sep"></div>
+  <button class="absent-btn" id="absentToggle">KLIK FOR AT MARKERE FRI I HELE DAGEN</button>
+  <span class="iam-hint" id="iamHint">Vælg din rolle for at bytte vagter eller melde fra</span>
 </div>
 
 <div class="week-nav">
-    <button class="wnav-arrow" id="prevWeek">←</button>
-    <div class="wnav-center">
-        <span style="font-family:var(--display); opacity:0.4;">UGE</span>
-        <input type="text" id="weekInput" class="wnav-input" value="9" readonly>
-        <span id="weekRange" style="font-size:0.5rem; font-weight:bold;"></span>
-    </div>
-    <button class="wnav-arrow" id="nextWeek">→</button>
+  <button class="wnav-arrow" id="wnavPrev">&#8592;</button>
+  <div class="wnav-center">
+    <div class="wnav-label">UGE</div>
+    <input class="wnav-input" id="wnavInput" type="number" min="9" max="27" value="9" />
+    <div class="wnav-range" id="wnavRange">—</div>
+  </div>
+  <button class="wnav-arrow" id="wnavNext">&#8594;</button>
+</div>
+<div id="schedules"></div>
+
+<div class="legend">
+  <div class="legend-item"><strong>Pause Avi:</strong> 13:00–13:30 dagligt</div>
+  <div class="legend-item"><strong>Pause Mie+Tarja:</strong> 12:00–12:30 dagligt</div>
+  <div class="legend-item rule-mie"><strong>★ Mie:</strong> ALTID man 15–16 og tor 15–16</div>
+  <div class="legend-item"><strong>Undtagelse:</strong> 1 uge må Mie have tor+fre 15–16 (UGE 11)</div>
+  <div class="legend-item"><strong>Fre 15–16 rotation:</strong> Tarja(9) · Avi(10) · Mie(11) · Tarja(12)</div>
+  <div class="legend-item"><strong>Rød:</strong> Fraværsdag</div>
 </div>
 
-<div class="hours-bar" id="hoursBar">
-    <span>AVI: <b>0t</b></span>
-    <span>TARJA: <b>0t</b></span>
-    <span>MIE: <b>0t</b></span>
-</div>
-
-<div id="scheduleOutput"></div>
-
+<!-- SWAP MODAL -->
 <div class="modal-overlay" id="swapModal">
-    <div class="modal">
-        <div class="modal-h2">BYT VAGT</div>
-        <div id="swapInfo" style="margin-bottom:20px; font-size:0.9rem;"></div>
-        <div id="swapOptions"></div>
-        <button onclick="document.getElementById('swapModal').classList.remove('open')" style="width:100%; border:none; background:none; cursor:pointer; text-decoration:underline; font-size:0.7rem; margin-top:10px;">ANNULLER</button>
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">SKIFT VAGT</div>
+      <button class="modal-close" id="modalClose">✕</button>
     </div>
+    <div class="modal-body">
+      <div class="modal-info">
+        <div class="modal-info-label">Din vagt der byttes</div>
+        <div class="modal-info-val" id="swapSlotTime">—</div>
+        <div class="modal-info-sub" id="swapSlotDay">—</div>
+      </div>
+      <div class="modal-step">VÆLG HVEM DU VIL BYTTE MED</div>
+      <div class="swap-options" id="swapOptions"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnCancel">ANNULLER</button>
+        <button class="btn-accept" id="btnAccept">ACCEPTER BYTTE ✓</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="toast"></div>
+<!-- REGRET MODAL -->
+<div class="modal-overlay" id="regretModal">
+  <div class="modal">
+    <div class="modal-header" style="background:#E05050;">
+      <div class="modal-title">FORTRYD BYTTE</div>
+      <button class="modal-close" id="regretClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info" id="regretSlotInfo">
+        <div class="modal-info-label">Vagt</div>
+        <div class="modal-info-val" id="regretSlotTime">—</div>
+        <div class="modal-info-sub" id="regretSlotDay">—</div>
+      </div>
+      <div style="display:flex;gap:0.7rem;margin-top:0.9rem;">
+        <div style="flex:1;background:#f8f8f2;border:2.5px solid #ccc;border-radius:3px;padding:0.6rem 0.8rem;">
+          <div style="font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;margin-bottom:0.3rem;">Originalt</div>
+          <div id="regretOrigAgents" style="display:flex;flex-wrap:wrap;gap:0.25rem;"></div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:1.2rem;opacity:0.4;">→</div>
+        <div style="flex:1;background:#f8f8f2;border:2.5px solid #ccc;border-radius:3px;padding:0.6rem 0.8rem;">
+          <div style="font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;margin-bottom:0.3rem;">Nuværende</div>
+          <div id="regretCurrAgents" style="display:flex;flex-wrap:wrap;gap:0.25rem;"></div>
+        </div>
+      </div>
+      <div class="modal-step" style="margin-top:1.1rem;">HVAD VIL DU GØRE?</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.6rem;">
+        <button class="btn-regret-opt" id="btnTakeBack">↩ TAG MIN VAGT TILBAGE</button>
+        <button class="btn-regret-opt btn-regret-give" id="btnGiveToOther">⇄ GIV TIL EN ANDEN</button>
+      </div>
+      <!-- Give-to-other sub-panel -->
+      <div id="regretGivePanel" style="display:none;margin-top:0.8rem;">
+        <div class="modal-step">VÆLG HVEM DER SKAL HAVE VAGTEN</div>
+        <div class="swap-options" id="regretGiveOptions" style="margin-top:0.5rem;"></div>
+        <button class="btn-accept" id="btnRegretConfirmGive" style="margin-top:0.8rem;width:100%;">BEKRÆFT ✓</button>
+      </div>
+      <button class="btn-cancel" id="btnRegretCancel" style="margin-top:0.8rem;width:100%;">ANNULLER</button>
+    </div>
+  </div>
+</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<div class="toast" id="toast"></div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
-        authDomain: "vagtplan-fcaf8.firebaseapp.com",
-        projectId: "vagtplan-fcaf8",
-        storageBucket: "vagtplan-fcaf8.firebasestorage.app",
-        messagingSenderId: "1094720834219",
-        appId: "1:1094720834219:web:3e858649614a5393dac5ee"
-    };
+<script>
+(function(){
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+/* ═══════════════════════════════════════════════════════════════════
+   SCHEDULE DATA — CORRECTED per rules:
 
-    const WEEKS = [
-      {
-        "wi": 0, "wn": 9, "range": "23/2 – 27/2",
-        "days": [
-          {"date": "23/2", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "24/2", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
-          {"date": "25/2", "name": "Onsdag", "isToday": true, "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
-          {"date": "26/2", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "27/2", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}
-        ]
-      },
-      {
-        "wi": 1, "wn": 10, "range": "2/3 – 6/3",
-        "days": [
-          {"date": "2/3", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "3/3", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
-          {"date": "4/3", "name": "Onsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
-          {"date": "5/3", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "6/3", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}
-        ]
-      },
-      {
-        "wi": 2, "wn": 11, "range": "9/3 – 13/3",
-        "days": [
-          {"date": "9/3", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "10/3", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Avi", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
-          {"date": "11/3", "name": "Onsdag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
-          {"date": "12/3", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "13/3", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Avi", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Avi", "Mie"]}, {"time": "14:00-14:30", "agents": ["Avi", "Tarja"]}, {"time": "14:30-15:00", "agents": ["Mie", "Tarja"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]}
-        ]
-      },
-      {
-        "wi": 3, "wn": 12, "range": "16/3 – 20/3",
-        "days": [
-          {"date": "16/3", "name": "Mandag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "17/3", "name": "Tirsdag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Tarja", "Avi"]}, {"time": "15:00-16:00", "agents": ["Tarja"]}]},
-          {"date": "18/3", "name": "Onsdag", "slots": [{"time": "08:00-12:00", "agents": ["Tarja", "Mie"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Mie"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]},
-          {"date": "19/3", "name": "Torsdag", "slots": [{"time": "08:00-12:00", "agents": ["Mie", "Avi"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Mie"]}]},
-          {"date": "20/3", "name": "Fredag", "slots": [{"time": "08:00-12:00", "agents": ["Avi", "Tarja"]}, {"time": "12:00-12:30", "agents": ["Avi"]}, {"time": "12:30-13:00", "agents": ["Tarja", "Mie"]}, {"time": "13:00-13:30", "agents": ["Tarja", "Mie"]}, {"time": "13:30-14:00", "agents": ["Tarja", "Mie"]}, {"time": "14:00-14:30", "agents": ["Tarja", "Avi"]}, {"time": "14:30-15:00", "agents": ["Mie", "Avi"]}, {"time": "15:00-16:00", "agents": ["Avi"]}]}
-        ]
-      }
-    ];
+   RULE: Mie has 15:00-16:00 every MONDAY  ✓ (was already correct all weeks)
+   RULE: Mie has 15:00-16:00 every THURSDAY ✓ fixed below:
+         UGE 9  Thu: was Avi   → now Mie
+         UGE 10 Thu: was Tarja → now Mie
+         UGE 11 Thu: was Tarja → now Mie  (exception week: Mie also has Fri)
+         UGE 12 Thu: was Avi   → now Mie
 
-    let activeWeek = 0;
-    let filterAgent = '';
-    let iamAgent = '';
-    let fbChanges = {};
+   EXCEPTION: UGE 11 is the one allowed week where Mie covers BOTH
+              Thu 15-16 AND Fri 15-16.
 
-    const COLORS = { Avi: '#D4F5C4', Tarja: '#E8D5FF', Mie: '#FFD5E8' };
+   SIDE EFFECT: UGE 11 Wed 15-16 was Mie (wrong extra) → changed to Avi.
 
-    // --- RENDER ---
-    function render() {
-        const week = WEEKS[activeWeek];
-        document.getElementById('weekRange').textContent = week.range;
-        document.getElementById('weekInput').value = week.wn;
+   Fri 15-16 rotation: UGE9=Tarja · UGE10=Avi · UGE11=Mie · UGE12=Tarja
+═══════════════════════════════════════════════════════════════════ */
 
-        let html = `<div class="day-grid">`;
-        let hoursCount = { Avi: 0, Tarja: 0, Mie: 0 };
+var WEEKS = [{"wi":0,"wn":9,"vp":1,"label":"UGE 9","range":"23/2 – 27/2","days":[{"date":"23/2","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/2","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/2","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"26/2","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/2","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":1,"wn":10,"vp":2,"label":"UGE 10","range":"2/3 – 6/3","days":[{"date":"2/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"3/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"4/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"5/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"6/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":2,"wn":11,"vp":3,"label":"UGE 11","range":"9/3 – 13/3","days":[{"date":"9/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"10/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"11/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"12/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"13/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":3,"wn":12,"vp":1,"label":"UGE 12","range":"16/3 – 20/3","days":[{"date":"16/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"17/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"18/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"19/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"20/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":4,"wn":13,"vp":2,"label":"UGE 13","range":"23/3 – 27/3","days":[{"date":"23/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"25/3","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"26/3","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"27/3","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":5,"wn":14,"vp":3,"label":"UGE 14","range":"30/3 – 3/4","days":[{"date":"30/3","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"31/3","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"1/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"2/4","name":"Torsdag","isToday":false,"isHoliday":true,"holName":"Skærtorsdag","holIcon":"✝️","slots":[]},{"date":"3/4","name":"Fredag","isToday":false,"isHoliday":true,"holName":"Langfredag","holIcon":"✝️","slots":[]}]},{"wi":6,"wn":15,"vp":1,"label":"UGE 15","range":"6/4 – 10/4","days":[{"date":"6/4","name":"Mandag","isToday":false,"isHoliday":true,"holName":"2. Påskedag","holIcon":"🐣","slots":[]},{"date":"7/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"8/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"9/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"10/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":7,"wn":16,"vp":2,"label":"UGE 16","range":"13/4 – 17/4","days":[{"date":"13/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"14/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"15/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"16/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"17/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":8,"wn":17,"vp":3,"label":"UGE 17","range":"20/4 – 24/4","days":[{"date":"20/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"21/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"22/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"23/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"24/4","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":9,"wn":18,"vp":1,"label":"UGE 18","range":"27/4 – 1/5","days":[{"date":"27/4","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"28/4","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"29/4","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"30/4","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"1/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":10,"wn":19,"vp":2,"label":"UGE 19","range":"4/5 – 8/5","days":[{"date":"4/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"5/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"6/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"7/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"8/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":11,"wn":20,"vp":3,"label":"UGE 20","range":"11/5 – 15/5","days":[{"date":"11/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"12/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"13/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"14/5","name":"Torsdag","isToday":false,"isHoliday":true,"holName":"Kristi Himmelfartsdag","holIcon":"⛪","slots":[]},{"date":"15/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":12,"wn":21,"vp":1,"label":"UGE 21","range":"18/5 – 22/5","days":[{"date":"18/5","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"19/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"20/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"21/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"22/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":13,"wn":22,"vp":2,"label":"UGE 22","range":"25/5 – 29/5","days":[{"date":"25/5","name":"Mandag","isToday":false,"isHoliday":true,"holName":"2. Pinsedag","holIcon":"🕊️","slots":[]},{"date":"26/5","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"27/5","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"28/5","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"29/5","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":14,"wn":23,"vp":3,"label":"UGE 23","range":"1/6 – 5/6","days":[{"date":"1/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"2/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"3/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"4/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"5/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":15,"wn":24,"vp":1,"label":"UGE 24","range":"8/6 – 12/6","days":[{"date":"8/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"9/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"10/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"11/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"12/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]},{"wi":16,"wn":25,"vp":2,"label":"UGE 25","range":"15/6 – 19/6","days":[{"date":"15/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"16/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Tarja"]}]},{"date":"17/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"18/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"19/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Avi"]}]}]},{"wi":17,"wn":26,"vp":3,"label":"UGE 26","range":"22/6 – 26/6","days":[{"date":"22/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"23/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"24/6","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"25/6","name":"Torsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja","Mie"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"26/6","name":"Fredag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja"]},{"time":"14:30-15:00","agents":["Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]}]},{"wi":18,"wn":27,"vp":1,"label":"UGE 27","range":"29/6 – 1/7","days":[{"date":"29/6","name":"Mandag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Mie","Tarja"]},{"time":"14:00-14:30","agents":["Mie","Tarja"]},{"time":"14:30-15:00","agents":["Mie","Tarja"]},{"time":"15:00-16:00","agents":["Mie"]}]},{"date":"30/6","name":"Tirsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Mie"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Mie"]},{"time":"14:30-15:00","agents":["Tarja","Mie"]},{"time":"15:00-16:00","agents":["Avi"]}]},{"date":"1/7","name":"Onsdag","isToday":false,"isHoliday":false,"holName":"","holIcon":"","slots":[{"time":"08:00-12:00","agents":["Avi","Tarja"]},{"time":"12:00-12:30","isBreak":true,"label":"PAUSE — MIE & TARJA"},{"time":"12:30-13:00","agents":["Tarja","Mie"]},{"time":"13:00-13:30","isBreak":true,"label":"PAUSE — AVI"},{"time":"13:30-14:00","agents":["Avi","Tarja"]},{"time":"14:00-14:30","agents":["Tarja","Avi"]},{"time":"14:30-15:00","agents":["Tarja","Avi"]},{"time":"15:00-16:00","agents":["Tarja"]}]}]}];
 
-        week.days.forEach((day, di) => {
-            // Find who is marked absent on this specific day
-            let absentAgents = [];
-            ['Avi', 'Tarja', 'Mie'].forEach(a => {
-                if (fbChanges[`abs_${activeWeek}_${di}_${a}`]) absentAgents.push(a);
+var AGENT_HL   = {Avi:'#D4F5C4',Tarja:'#E8D5FF',Mie:'#FFD5E8'};
+var ALL_AGENTS = ['Avi','Tarja','Mie'];
+var activeWeek  = 0; // auto-set to current week
+var activeAgent = '';
+var activeIam   = '';
+var absentMode  = false;
+var absentDays  = {}; // "wi-di" -> agentName
+var swapSlotEl=null, swapSlotData=null, swapTarget='';
+
+// ── Build UI ─────────────────────────────────────────────────────────────────
+function buildUI(){
+  var schEl=document.getElementById('schedules');
+
+  WEEKS.forEach(function(week){
+    // Panel (no tabs anymore - using navigator)
+    var panel=document.createElement('div');
+    panel.className='schedule'+(week.wi===activeWeek?' visible':'');
+    panel.id='week-'+week.wi;
+    var grid=document.createElement('div'); grid.className='day-grid';
+
+    week.days.forEach(function(day,di){
+      var col=document.createElement('div');
+      col.className='day-col'+(day.isToday?' today':'')+(day.isHoliday?' holiday':'');
+      col.dataset.wi=week.wi; col.dataset.di=di;
+
+      // Click the entire column to toggle absent when in absent mode
+      col.addEventListener('click', function(e) {
+        if (!absentMode || !activeIam) return;
+        if (day.isHoliday) return;
+        // Don't trigger if clicking the undo button inside absent overlay
+        if (e.target.classList.contains('absent-undo')) return;
+        doAbsent(week.wi, di, col);
+      });
+
+      // Header
+      var hdr=document.createElement('div'); hdr.className='day-header';
+      var dn=document.createElement('div'); dn.className='day-name'; dn.textContent=day.name; hdr.appendChild(dn);
+      var dd=document.createElement('div'); dd.className='day-date'; dd.textContent=day.date; hdr.appendChild(dd);
+      if(day.isHoliday){var hn=document.createElement('div');hn.className='holiday-name';hn.textContent=day.holName;hdr.appendChild(hn);}
+      if(day.isToday){var tp=document.createElement('div');tp.className='today-pill';tp.textContent='▶ I DAG';hdr.appendChild(tp);}
+
+      // Absent mark button (shows in absent mode)
+      var amBtn=document.createElement('button'); amBtn.className='absent-mode-btn'; amBtn.textContent='FRI HELE DAGEN';
+      amBtn.addEventListener('click',function(e){e.stopPropagation();doAbsent(week.wi,di,col);});
+      hdr.appendChild(amBtn);
+      col.appendChild(hdr);
+
+      // Absent overlay
+      var ovl=document.createElement('div'); ovl.className='absent-overlay';
+      var oIco=document.createElement('div'); oIco.className='absent-icon'; oIco.textContent='🚫'; ovl.appendChild(oIco);
+      var oTxt=document.createElement('div'); oTxt.className='absent-text'; oTxt.textContent='FRAVÆRENDE'; ovl.appendChild(oTxt);
+      var oWho=document.createElement('div'); oWho.className='absent-who'; oWho.id='abswho-'+week.wi+'-'+di; ovl.appendChild(oWho);
+      var oUndo=document.createElement('button'); oUndo.className='absent-undo'; oUndo.textContent='↩ FORTRYD';
+      oUndo.addEventListener('click',function(){doAbsent(week.wi,di,col);});
+      ovl.appendChild(oUndo);
+      col.appendChild(ovl);
+
+      if(day.isHoliday){
+        var hb=document.createElement('div'); hb.className='holiday-body';
+        var hico=document.createElement('div'); hico.className='holiday-icon'; hico.textContent=day.holIcon; hb.appendChild(hico);
+        var hoff=document.createElement('div'); hoff.className='holiday-off'; hoff.textContent='FRI DAG'; hb.appendChild(hoff);
+        var hsub=document.createElement('div'); hsub.className='holiday-sub'; hsub.textContent=day.holName; hb.appendChild(hsub);
+        col.appendChild(hb);
+      } else {
+        day.slots.forEach(function(slot,si){
+          var div=document.createElement('div');
+          var tEl=document.createElement('div'); tEl.className='slot-time'; tEl.textContent=slot.time;
+          if(slot.isBreak){
+            div.className='slot break-slot';
+            var bl=document.createElement('div'); bl.className='break-label'; bl.textContent=slot.label;
+            div.appendChild(tEl); div.appendChild(bl);
+          } else {
+            div.className='slot '+slot.agents.map(function(a){return 'has-'+a;}).join(' ');
+            div.dataset.agents=slot.agents.join(',');
+            div.dataset.wi=week.wi; div.dataset.di=di; div.dataset.si=si;
+            var aEl=document.createElement('div'); aEl.className='slot-agents';
+            slot.agents.forEach(function(a){
+              var tag=document.createElement('span'); tag.className='agent-tag '+a; tag.textContent=a.toUpperCase(); aEl.appendChild(tag);
             });
-            
-            html += `<div class="day-col ${day.isToday ? 'today' : ''}">
-                <div class="day-header">
-                    <div>
-                        <div class="day-name">${day.name}</div>
-                        <div class="day-date">${day.date}</div>
-                    </div>`;
-            
-            // Show "Meld mig fri" button if logged in and not already absent
-            if (iamAgent && !absentAgents.includes(iamAgent)) {
-                html += `<button class="day-free-btn" onclick="window.toggleAbsent(${di}, false)">MELD MIG FRI</button>`;
-            }
-            html += `</div>`;
-            
-            // Undo banner if the logged in agent IS absent today
-            if (iamAgent && absentAgents.includes(iamAgent)) {
-                html += `<div style="background:var(--absent-red); color:white; font-family:var(--display); font-size:0.8rem; text-align:center; padding:5px; cursor:pointer;" onclick="window.toggleAbsent(${di}, true)">IKKE TIL STEDE - FORTRYD</div>`;
-            }
-
-            day.slots.forEach((slot, si) => {
-                const swapKey = `swap_${activeWeek}_${di}_${si}`;
-                const swapData = fbChanges[swapKey];
-                const currentAgents = (swapData && swapData.agents) ? swapData.agents : slot.agents;
-                
-                const [start, end] = slot.time.split('-');
-                const [sH, sM] = start.split(':').map(Number);
-                const [eH, eM] = end.split(':').map(Number);
-                const duration = (eH + eM/60) - (sH + sM/60);
-
-                currentAgents.forEach(a => {
-                    if (!absentAgents.includes(a)) hoursCount[a] += duration;
-                });
-
-                // Is swappable if I am currently scheduled, OR if I was originally scheduled and someone else has it now (so I can undo it)
-                const isSwappable = iamAgent && (currentAgents.includes(iamAgent) || (swapData && slot.agents.includes(iamAgent)));
-                
-                const isHl = filterAgent && currentAgents.includes(filterAgent);
-                const isDim = filterAgent && !currentAgents.includes(filterAgent);
-
-                html += `<div class="slot ${isHl ? 'highlighted' : ''} ${isDim ? 'dimmed' : ''} ${isSwappable ? 'swappable' : ''}" 
-                             style="${isHl ? '--hl-color:' + COLORS[filterAgent] : ''}"
-                             onclick="window.handleSlotClick(${di}, ${si})">
-                    <div class="slot-time">
-                        ${slot.time}
-                        ${swapData ? `<span class="changed-badge">ÆNDRET</span>` : ''}
-                    </div>
-                    <div>${currentAgents.map(a => {
-                        const isThisAgentAbsent = absentAgents.includes(a);
-                        return `<span class="agent-tag ${a} ${isThisAgentAbsent ? 'is-absent' : ''}">${isThisAgentAbsent ? `${a}-ikke til stede` : a}</span>`;
-                    }).join('')}</div>
-                </div>`;
+            div.appendChild(tEl); div.appendChild(aEl);
+            div.addEventListener('click',function(){
+              if(!activeIam||absentMode) return;
+              if(absentDays[week.wi+'-'+di]) return;
+              var ags=(this.dataset.agents||'').split(',').filter(Boolean);
+              var slotKey='swap_'+week.wi+'_'+di+'_'+si;
+              var hist=swapHistory[slotKey];
+              // If agent was originally on this slot but got swapped away → offer regret
+              if(ags.indexOf(activeIam)===-1){
+                if(hist && hist.originalAgents && hist.originalAgents.indexOf(activeIam)>-1){
+                  openRegret(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags,slotKey:slotKey,hist:hist});
+                }
+                return;
+              }
+              // Normal swap — but also show regret option if this slot was previously swapped
+              openSwap(this,{time:slot.time,dayName:day.name+' '+day.date,agents:ags,slotKey:slotKey,hist:hist});
             });
-            html += `</div>`;
+          }
+          col.appendChild(div);
         });
-        
-        document.getElementById('scheduleOutput').innerHTML = html + `</div>`;
+      }
+      grid.appendChild(col);
+    });
+    panel.appendChild(grid);
+    schEl.appendChild(panel);
+  });
+}
 
-        document.getElementById('hoursBar').innerHTML = 
-            `<span>AVI: <b>${hoursCount.Avi.toFixed(1)}t</b></span>` +
-            `<span>TARJA: <b>${hoursCount.Tarja.toFixed(1)}t</b></span>` +
-            `<span>MIE: <b>${hoursCount.Mie.toFixed(1)}t</b></span>`;
+// ── Absent ───────────────────────────────────────────────────────────────────
+function doAbsent(wi,di,col){
+  var key=wi+'-'+di;
+  if(absentDays[key]){
+    delete absentDays[key];
+    col.classList.remove('absent-day');
+    var w=document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent='';
+    toast('Fraværsmarkering fjernet',false);
+    fbSaveAbsent(wi,di,null);
+  } else {
+    absentDays[key]=activeIam;
+    col.classList.add('absent-day');
+    var w=document.getElementById('abswho-'+wi+'-'+di); if(w) w.textContent=activeIam.toUpperCase()+' — FRAVÆRENDE';
+    toast(activeIam+' markeret fraværende',true);
+    fbSaveAbsent(wi,di,activeIam);
+  }
+}
+
+function fbSaveAbsent(wi,di,agent){
+  if(!window._fbReady) return;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet;
+  var key = 'absent_'+wi+'_'+di;
+  var val = agent ? { wi:wi, di:di, agent:agent, ts:Date.now() } : null;
+  fset(fdoc(db,'vagtplan','changes'), { [key]: val }, {merge:true})
+    .catch(function(e){ console.error('Firebase absent error',e); });
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function render(){
+  // Navigator updated via updateNav()
+  document.querySelectorAll('.schedule').forEach(function(p,i){
+    p.classList.toggle('visible',i===activeWeek);
+  });
+
+  var panel=document.getElementById('week-'+activeWeek);
+  if(!panel) return;
+
+  // Absent mode class on grid
+  var grid=panel.querySelector('.day-grid');
+  if(grid) grid.classList.toggle('absent-mode',absentMode&&!!activeIam);
+
+  panel.querySelectorAll('.slot:not(.break-slot)').forEach(function(slot){
+    var ags=(slot.dataset.agents||'').split(',').filter(Boolean);
+    slot.classList.remove('highlighted','dimmed','swappable');
+    slot.style.removeProperty('--hl-bg');
+    slot.querySelectorAll('.agent-tag').forEach(function(t){t.classList.remove('hl-agent');});
+
+    if(activeAgent){
+      if(ags.indexOf(activeAgent)>-1){
+        slot.classList.add('highlighted');
+        slot.style.setProperty('--hl-bg',AGENT_HL[activeAgent]||'#C8E8A0');
+        slot.querySelectorAll('.agent-tag.'+activeAgent).forEach(function(t){t.classList.add('hl-agent');});
+      } else {
+        slot.classList.add('dimmed');
+      }
+    }
+    if(activeIam&&!absentMode&&ags.indexOf(activeIam)>-1){
+      slot.classList.add('swappable');
+    }
+    // Show regret indicator: agent was swapped off this slot
+    slot.classList.remove('regret-changed');
+    var sKey='swap_'+slot.dataset.wi+'_'+slot.dataset.di+'_'+slot.dataset.si;
+    if(activeIam&&!absentMode&&swapHistory[sKey]){
+      var sh=swapHistory[sKey];
+      if(sh.originalAgents&&sh.originalAgents.indexOf(activeIam)>-1&&ags.indexOf(activeIam)===-1){
+        slot.classList.add('regret-changed');
+      }
+    }
+  });
+}
+
+// ── Absent toggle button ─────────────────────────────────────────────────────
+var absentToggle=document.getElementById('absentToggle');
+absentToggle.addEventListener('click',function(){
+  if(!activeIam) return;
+  absentMode=!absentMode;
+  absentToggle.classList.toggle('active',absentMode);
+  absentToggle.textContent=absentMode?'✕ ANNULLER FRAVÆRSMARKERING':'KLIK FOR AT MARKERE FRI I HELE DAGEN';
+  var hint=document.getElementById('iamHint');
+  if(hint) hint.textContent=absentMode?'Klik på en dag i kalenderen for at markere fraværsdag':'Vælg din rolle for at bytte vagter eller melde fra';
+  render();
+});
+
+// ── Filter buttons ───────────────────────────────────────────────────────────
+document.querySelectorAll('.abtn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    activeAgent=btn.getAttribute('data-agent');
+    document.querySelectorAll('.abtn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    render();
+  });
+});
+
+// ── IAM buttons ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.iam-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var val=btn.getAttribute('data-iam');
+    if(activeIam===val){
+      activeIam=''; absentMode=false;
+      document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
+      absentToggle.classList.remove('visible','active');
+      absentToggle.textContent='KLIK FOR AT MARKERE FRI I HELE DAGEN';
+      var hint=document.getElementById('iamHint');
+      if(hint) hint.textContent='Vælg din rolle for at bytte vagter eller melde fra';
+    } else {
+      activeIam=val; absentMode=false;
+      document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      absentToggle.classList.add('visible');
+      absentToggle.classList.remove('active');
+      absentToggle.textContent='KLIK FOR AT MARKERE FRI I HELE DAGEN';
+      var hint=document.getElementById('iamHint');
+      if(hint) hint.textContent='Klik en vagt for at bytte · Klik "Marker dag som fri" for at melde fra';
+    }
+    render();
+  });
+});
+
+// ── Swap modal ───────────────────────────────────────────────────────────────
+function openSwap(slotEl,data){
+  swapSlotEl=slotEl; swapSlotData=data; swapTarget='';
+  document.getElementById('swapSlotTime').textContent=data.time;
+  document.getElementById('swapSlotDay').textContent='Din vagt · '+data.dayName;
+  var opts=document.getElementById('swapOptions'); opts.innerHTML='';
+  ALL_AGENTS.filter(function(a){return a!==activeIam;}).forEach(function(agent){
+    var btn=document.createElement('button'); btn.className='swap-agent-btn'; btn.dataset.swap=agent;
+    var inShift=data.agents.indexOf(agent)>-1;
+    btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(inShift?'også på denne vagt':'ledig til bytte')+'</div>';
+    btn.addEventListener('click',function(){
+      swapTarget=agent;
+      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){b.classList.remove('selected');});
+      btn.classList.add('selected');
+      var acc=document.getElementById('btnAccept');
+      acc.classList.add('ready'); acc.textContent='GIV TIL '+agent.toUpperCase()+' ✓';
+    });
+    opts.appendChild(btn);
+  });
+  var acc=document.getElementById('btnAccept');
+  acc.classList.remove('ready'); acc.textContent='ACCEPTER BYTTE ✓';
+  document.getElementById('swapModal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('swapModal').classList.remove('open');
+  swapSlotEl=null; swapSlotData=null; swapTarget='';
+}
+function applySwap(wi, si, newAgents){
+  // Apply a swap visually given week index wi, slot element selector key, new agents array
+  var panel = document.getElementById('week-'+wi);
+  if(!panel) return;
+  var slots = panel.querySelectorAll('.slot:not(.break-slot)');
+  slots.forEach(function(slot){
+    if(slot.dataset.si === String(si.si) && slot.dataset.di === String(si.di) && slot.dataset.wi === String(wi)){
+      slot.dataset.agents = newAgents.join(',');
+      // rebuild classes
+      var allAgents = ['Avi','Tarja','Mie'];
+      allAgents.forEach(function(a){ slot.classList.remove('has-'+a); });
+      newAgents.forEach(function(a){ slot.classList.add('has-'+a); });
+      var aEl = slot.querySelector('.slot-agents');
+      if(aEl){ aEl.innerHTML=''; newAgents.forEach(function(a){ var t=document.createElement('span'); t.className='agent-tag '+a; t.textContent=a.toUpperCase(); aEl.appendChild(t); }); }
+    }
+  });
+}
+
+function acceptSwap(){
+  if(!swapTarget||!swapSlotEl) return;
+  var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
+  var idx=ags.indexOf(activeIam); if(idx>-1) ags[idx]=swapTarget;
+  var wi  = parseInt(swapSlotEl.dataset.wi);
+  var di  = parseInt(swapSlotEl.dataset.di);
+  var si  = parseInt(swapSlotEl.dataset.si);
+
+  // Apply locally
+  applySwap(wi, {di:di,si:si}, ags);
+  closeModal();
+  toast('Byttet: '+activeIam+' → '+swapTarget+' · '+swapSlotData.time, false);
+  render();
+
+  // Save to Firebase (pass original agents before swap)
+  fbSaveSwap(wi, di, si, ags, swapSlotData.agents);
+}
+
+function fbSaveSwap(wi, di, si, agents, originalAgents){
+  if(!window._fbReady) return;
+  var db=window._db, fdoc=window._fbDoc, fset=window._fbSet, fget=window._fbGet;
+  var key = 'swap_'+wi+'_'+di+'_'+si;
+  var docRef = fdoc(db,'vagtplan','changes');
+  // Only store originalAgents if this is the first swap (don't overwrite original on re-swap)
+  fget(docRef).then(function(snap){
+    var existing = snap.exists() ? snap.data()[key] : null;
+    var orig = (existing && existing.originalAgents) ? existing.originalAgents : originalAgents;
+    fset(docRef, { [key]: { wi:wi, di:di, si:si, agents:agents, originalAgents:orig, ts: Date.now() } }, {merge:true})
+      .catch(function(e){ console.error('Firebase save error',e); });
+  });
+}
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('btnCancel').addEventListener('click',closeModal);
+document.getElementById('btnAccept').addEventListener('click',acceptSwap);
+document.getElementById('swapModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+var toastTimer;
+function toast(msg,red){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(red?' red':'')+' show';
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},3500);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Week Navigator ───────────────────────────────────────────────────────────
+var wnMap = {}; // iso_week → wi
+WEEKS.forEach(function(w){ wnMap[w.wn] = w.wi; });
+
+function updateNav(){
+  var week = WEEKS[activeWeek];
+  var input = document.getElementById('wnavInput');
+  var range  = document.getElementById('wnavRange');
+  var prev   = document.getElementById('wnavPrev');
+  var next   = document.getElementById('wnavNext');
+  if(input) input.value = week.wn;
+  if(range) range.textContent = week.range;
+  if(prev)  prev.disabled = (activeWeek <= 0);
+  if(next)  next.disabled = (activeWeek >= WEEKS.length - 1);
+}
+
+document.getElementById('wnavPrev').addEventListener('click', function(){
+  if(activeWeek > 0){ activeWeek--; render(); updateNav(); }
+});
+document.getElementById('wnavNext').addEventListener('click', function(){
+  if(activeWeek < WEEKS.length-1){ activeWeek++; render(); updateNav(); }
+});
+document.getElementById('wnavInput').addEventListener('change', function(){
+  var wn = parseInt(this.value);
+  if(wnMap[wn] !== undefined){
+    activeWeek = wnMap[wn]; render(); updateNav();
+  } else {
+    // clamp to nearest valid
+    var keys = Object.keys(wnMap).map(Number).sort(function(a,b){return a-b;});
+    var clamped = wn < keys[0] ? keys[0] : keys[keys.length-1];
+    activeWeek = wnMap[clamped]; render(); updateNav();
+  }
+});
+document.getElementById('wnavInput').addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp'){ e.preventDefault(); if(activeWeek<WEEKS.length-1){activeWeek++;render();updateNav();} }
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(activeWeek>0){activeWeek--;render();updateNav();} }
+});
+
+// ── Regret / Fortryd ─────────────────────────────────────────────────────────
+var regretData = null; // {slotEl, time, dayName, slotKey, hist, currentAgents}
+var regretGiveTarget = '';
+
+function makeAgentTag(name){
+  var t=document.createElement('span');
+  t.className='agent-tag '+name;
+  t.textContent=name.toUpperCase();
+  return t;
+}
+
+function openRegret(slotEl, data){
+  regretData = data; regretGiveTarget = '';
+  document.getElementById('regretSlotTime').textContent = data.time;
+  document.getElementById('regretSlotDay').textContent  = data.dayName;
+
+  // Show original vs current agents
+  var origEl = document.getElementById('regretOrigAgents');
+  var currEl = document.getElementById('regretCurrAgents');
+  origEl.innerHTML=''; currEl.innerHTML='';
+  (data.hist.originalAgents||[]).forEach(function(a){ origEl.appendChild(makeAgentTag(a)); });
+  data.agents.forEach(function(a){ currEl.appendChild(makeAgentTag(a)); });
+
+  // Reset give panel
+  document.getElementById('regretGivePanel').style.display='none';
+  document.getElementById('btnRegretConfirmGive').classList.remove('ready');
+  document.getElementById('regretModal').classList.add('open');
+}
+
+function closeRegret(){
+  document.getElementById('regretModal').classList.remove('open');
+  regretData=null; regretGiveTarget='';
+}
+
+// Take back: restore the original agents for this agent's spot
+document.getElementById('btnTakeBack').addEventListener('click', function(){
+  if(!regretData) return;
+  var hist = regretData.hist;
+  var curr = regretData.agents.slice(); // current agents on slot
+
+  // Figure out: in the original, activeIam was there. In current they're not.
+  // We swap in activeIam in place of whoever took their spot.
+  // Strategy: restore the full original agents list
+  var newAgents = hist.originalAgents.slice();
+
+  var wi=hist.wi, di=hist.di, si=hist.si;
+  applySwap(wi, {di:di,si:si}, newAgents);
+  // Update WEEKS data
+  updateWeeksSlot(wi,di,si,newAgents);
+  closeRegret(); closeModal();
+  toast('Vagt gendannet til original ✓', false);
+  fbSaveSwap(wi, di, si, newAgents, hist.originalAgents);
+  // If newAgents === originalAgents, we can clear the swap record from history
+  if(JSON.stringify(newAgents.slice().sort())===JSON.stringify(hist.originalAgents.slice().sort())){
+    delete swapHistory['swap_'+wi+'_'+di+'_'+si];
+  }
+  render();
+});
+
+// Give to other: show agent picker
+document.getElementById('btnGiveToOther').addEventListener('click', function(){
+  if(!regretData) return;
+  var panel = document.getElementById('regretGivePanel');
+  panel.style.display = 'block';
+  var opts = document.getElementById('regretGiveOptions');
+  opts.innerHTML='';
+  regretGiveTarget='';
+  document.getElementById('btnRegretConfirmGive').classList.remove('ready');
+
+  // Show all agents except activeIam and those already on the slot
+  ALL_AGENTS.filter(function(a){ return a!==activeIam; }).forEach(function(agent){
+    var btn=document.createElement('button'); btn.className='swap-agent-btn'; btn.dataset.swap=agent;
+    var onSlot=regretData.agents.indexOf(agent)>-1;
+    btn.innerHTML='<div>'+agent.toUpperCase()+'</div><div class="swap-agent-sub">'+(onSlot?'allerede på vagten':'ledig')+'</div>';
+    btn.addEventListener('click',function(){
+      regretGiveTarget=agent;
+      opts.querySelectorAll('.swap-agent-btn').forEach(function(b){b.classList.remove('selected');});
+      btn.classList.add('selected');
+      var conf=document.getElementById('btnRegretConfirmGive');
+      conf.classList.add('ready'); conf.textContent='GIV TIL '+agent.toUpperCase()+' ✓';
+    });
+    opts.appendChild(btn);
+  });
+});
+
+// Confirm give-to-other
+document.getElementById('btnRegretConfirmGive').addEventListener('click', function(){
+  if(!regretData||!regretGiveTarget) return;
+  var hist=regretData.hist;
+  var curr=regretData.agents.slice();
+
+  // Replace whoever replaced activeIam with regretGiveTarget
+  // Find who is on the slot that wasn't originally there (the person who took activeIam's spot)
+  var newAgents=curr.slice();
+  // Find the "intruder" — someone on current slot not on original, or just use first non-original
+  var intruder=null;
+  for(var i=0;i<curr.length;i++){
+    if((hist.originalAgents||[]).indexOf(curr[i])===-1){ intruder=curr[i]; break; }
+  }
+  if(intruder){
+    var idx2=newAgents.indexOf(intruder);
+    if(idx2>-1) newAgents[idx2]=regretGiveTarget;
+  } else {
+    // Slot unchanged in structure — just add regretGiveTarget where activeIam was
+    // (shouldn't normally happen but be safe)
+    newAgents.push(regretGiveTarget);
+  }
+
+  var wi=hist.wi, di=hist.di, si=hist.si;
+  applySwap(wi,{di:di,si:si},newAgents);
+  updateWeeksSlot(wi,di,si,newAgents);
+  closeRegret(); closeModal();
+  toast('Vagt givet til '+regretGiveTarget+' ✓', false);
+  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents);
+  render();
+});
+
+document.getElementById('regretClose').addEventListener('click', closeRegret);
+document.getElementById('btnRegretCancel').addEventListener('click', closeRegret);
+document.getElementById('regretModal').addEventListener('click', function(e){ if(e.target===this) closeRegret(); });
+
+function updateWeeksSlot(wi,di,si,agents){
+  if(WEEKS[wi]&&WEEKS[wi].days[di]){
+    var slots=WEEKS[wi].days[di].slots;
+    var count=0;
+    for(var i=0;i<slots.length;i++){
+      if(!slots[i].isBreak){ if(count===si){slots[i].agents=agents;break;} count++; }
+    }
+  }
+}
+
+// ── Firebase sync ─────────────────────────────────────────────────────────────
+var swapHistory = {}; // key -> {wi,di,si,originalAgents,currentAgents}
+
+function applyAllChanges(data){
+  if(!data) return;
+  Object.keys(data).forEach(function(key){
+    var val = data[key];
+    if(!val) return; // null = deleted
+
+    if(key.indexOf('swap_')===0){
+      // Track history
+      swapHistory[key] = { wi:val.wi, di:val.di, si:val.si, originalAgents:val.originalAgents||val.agents, currentAgents:val.agents };
+      // Apply swap
+      applySwap(val.wi, {di:val.di, si:val.si}, val.agents);
+      // Also update the WEEKS data so filter/highlight works correctly
+      if(WEEKS[val.wi] && WEEKS[val.wi].days[val.di]){
+        var slots = WEEKS[val.wi].days[val.di].slots;
+        var realSi = 0; var count = 0;
+        for(var i=0;i<slots.length;i++){
+          if(!slots[i].isBreak){ if(count===val.si){realSi=i;break;} count++; }
+        }
+        slots[realSi].agents = val.agents;
+      }
     }
 
-    // --- LOGIC ---
-    window.handleSlotClick = (di, si) => {
-        if (!iamAgent) return;
-        const week = WEEKS[activeWeek];
-        const slot = week.days[di].slots[si];
-        
-        const swapKey = `swap_${activeWeek}_${di}_${si}`;
-        const swapData = fbChanges[swapKey];
-        const currentAgents = (swapData && swapData.agents) ? swapData.agents : slot.agents;
-        
-        const canGiveAway = currentAgents.includes(iamAgent);
-        const canUndo = swapData && slot.agents.includes(iamAgent); // Only originally scheduled agents can undo a shift change
-
-        if (!canGiveAway && !canUndo) return;
-
-        const modal = document.getElementById('swapModal');
-        const opts = document.getElementById('swapOptions');
-        document.getElementById('swapInfo').textContent = `${slot.time} - Hvad vil du gøre?`;
-        opts.innerHTML = '';
-
-        if (canGiveAway) {
-            ['Avi', 'Tarja', 'Mie'].filter(a => a !== iamAgent && !currentAgents.includes(a)).forEach(other => {
-                const btn = document.createElement('button');
-                btn.className = 'swap-btn';
-                btn.textContent = `GIV VAGT TIL ${other.toUpperCase()}`;
-                btn.onclick = async () => {
-                    const newA = currentAgents.map(a => a === iamAgent ? other : a);
-                    await setDoc(doc(db, 'vagtplan', 'changes'), { [swapKey]: { agents: newA, ts: Date.now() } }, { merge: true });
-                    modal.classList.remove('open');
-                    toast("Vagt byttet!");
-                };
-                opts.appendChild(btn);
-            });
-        }
-
-        if (canUndo) {
-            const btn = document.createElement('button');
-            btn.className = 'swap-btn undo-btn';
-            btn.textContent = `FORTRYD ÆNDRING (GENDAN)`;
-            btn.onclick = async () => {
-                await setDoc(doc(db, 'vagtplan', 'changes'), { [swapKey]: deleteField() }, { merge: true });
-                modal.classList.remove('open');
-                toast("Ændring fortrudt!");
-            };
-            opts.appendChild(btn);
-        }
-
-        modal.classList.add('open');
-    };
-
-    window.toggleAbsent = async (di, remove = false) => {
-        if (!iamAgent) return;
-        const key = `abs_${activeWeek}_${di}_${iamAgent}`;
-        const data = { [key]: remove ? deleteField() : true };
-        await setDoc(doc(db, 'vagtplan', 'changes'), data, { merge: true });
-        toast(remove ? "Markering fjernet" : "Markeret som fraværende");
-    };
-
-    function toast(msg) {
-        const t = document.getElementById('toast');
-        t.textContent = msg; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 3000);
+    if(key.indexOf('absent_')===0){
+      // Apply absent day
+      var col = document.querySelector('.day-col[data-wi="'+val.wi+'"][data-di="'+val.di+'"]');
+      if(col){
+        absentDays[val.wi+'-'+val.di] = val.agent;
+        col.classList.add('absent-day');
+        var w = document.getElementById('abswho-'+val.wi+'-'+val.di);
+        if(w) w.textContent = val.agent.toUpperCase()+' — FRAVÆRENDE';
+      }
     }
+  });
+  render();
+}
 
-    // --- LISTENERS ---
-    onSnapshot(doc(db, 'vagtplan', 'changes'), (snap) => {
-        document.getElementById('syncDot').style.background = '#4CAF50';
-        document.getElementById('syncStatus').textContent = 'LIVE';
-        if (snap.exists()) fbChanges = snap.data();
-        render();
+function startFirebaseSync(){
+  if(!window._fbReady){ window.addEventListener('firebaseReady', startFirebaseSync, {once:true}); return; }
+  var db=window._db, fdoc=window._fbDoc, fsnap=window._fbSnap;
+  // Real-time listener — fires immediately with current data, then on every change
+  fsnap(fdoc(db,'vagtplan','changes'), function(snapshot){
+    if(snapshot.exists()){
+      applyAllChanges(snapshot.data());
+    }
+  }, function(err){ console.error('Firebase sync error', err); });
+}
+
+// Show sync status indicator
+function showSyncStatus(ok){
+  var el = document.getElementById('syncDot');
+  if(!el) return;
+  el.title = ok ? 'Forbundet til Firebase — ændringer synkroniseres live' : 'Ikke forbundet';
+  el.style.background = ok ? '#4CAF50' : '#E05050';
+}
+window.addEventListener('firebaseReady', function(){ showSyncStatus(true); });
+
+// ── Auto today highlight ────────────────────────────────────────────────────
+function refreshToday(){
+  var now = new Date();
+  var todayStr = now.getDate() + '/' + (now.getMonth()+1); // e.g. "26/2"
+  WEEKS.forEach(function(week){
+    week.days.forEach(function(day){
+      day.isToday = (day.date === todayStr);
     });
-
-    document.querySelectorAll('.abtn').forEach(b => b.onclick = () => {
-        document.querySelectorAll('.abtn').forEach(x => x.classList.remove('active'));
-        b.classList.add('active'); filterAgent = b.dataset.filter; render();
+  });
+  // Also auto-navigate to the week containing today
+  var found = false;
+  WEEKS.forEach(function(week){
+    if(!found) week.days.forEach(function(day){
+      if(day.isToday){ activeWeek = week.wi; found = true; }
     });
+  });
+}
 
-    document.querySelectorAll('.iam-btn').forEach(b => b.onclick = () => {
-        if (iamAgent === b.dataset.iam) {
-            iamAgent = ''; b.classList.remove('active');
-        } else {
-            document.querySelectorAll('.iam-btn').forEach(x => x.classList.remove('active'));
-            iamAgent = b.dataset.iam; b.classList.add('active');
-        }
-        render();
-    });
-
-    document.getElementById('prevWeek').onclick = () => { if(activeWeek > 0) { activeWeek--; render(); } };
-    document.getElementById('nextWeek').onclick = () => { if(activeWeek < WEEKS.length-1) { activeWeek++; render(); } };
-
-    render(); // Initial draw
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',function(){refreshToday();buildUI();render();updateNav();startFirebaseSync();});
+} else {
+  refreshToday();buildUI();render();updateNav();startFirebaseSync();
+}
+})();
 </script>
-
 </body>
 </html>

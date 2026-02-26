@@ -63,6 +63,17 @@
   .iam-hint { font-size:0.48rem; letter-spacing:0.1em; color:rgba(255,255,255,0.3); margin-left:auto; font-style:italic; }
 
   /* WEEK TABS */
+  /* HOURS BAR */
+  .hours-bar {
+    background: var(--ink); color: white;
+    padding: 10px 20px; border-bottom: 4px solid var(--ink);
+    display: flex; justify-content: space-around;
+    font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.05em;
+  }
+  .hours-bar span { opacity: 0.8; display: flex; align-items: center; gap: 6px; }
+  .hours-bar b { color: var(--lime); font-size: 1.4rem; opacity: 1; }
+  .hours-bar .absent-note { font-size: 0.45rem; color: var(--absent-red); letter-spacing: 0.08em; opacity: 1; }
+
   /* WEEK NAVIGATOR */
   .week-nav {
     background: var(--peach);
@@ -343,6 +354,11 @@
   </div>
   <button class="wnav-arrow" id="wnavNext">&#8594;</button>
 </div>
+<div class="hours-bar" id="hoursBar">
+  <span>AVI: <b id="hAvi">0t</b></span>
+  <span>TARJA: <b id="hTarja">0t</b></span>
+  <span>MIE: <b id="hMie">0t</b></span>
+</div>
 <div id="schedules"></div>
 
 <div class="legend">
@@ -577,6 +593,75 @@ function fbSaveAbsent(wi,di,agent){
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
+// ── Hours Calculator ─────────────────────────────────────────────────────────
+function calcHours(){
+  var week = WEEKS[activeWeek];
+  var totals = { Avi: 0, Tarja: 0, Mie: 0 };
+  var absentAgents = {}; // "di" -> [agents absent that day]
+
+  // Build absent map for this week from absentDays
+  Object.keys(absentDays).forEach(function(key){
+    // key format: "wi-di"
+    var parts = key.split('-');
+    if(parseInt(parts[0]) === activeWeek){
+      var di = parseInt(parts[1]);
+      if(!absentAgents[di]) absentAgents[di] = [];
+      absentAgents[di].push(absentDays[key]);
+    }
+  });
+
+  week.days.forEach(function(day, di){
+    if(day.isHoliday) return;
+    var absent = absentAgents[di] || [];
+
+    day.slots.forEach(function(slot, si){
+      if(slot.isBreak) return; // breaks don't count
+
+      // Get current agents — check swapHistory first, then slot.agents
+      var agents = slot.agents.slice();
+      var swapKey = 'swap_' + activeWeek + '_' + di + '_' + si;
+      if(swapHistory[swapKey] && swapHistory[swapKey].currentAgents){
+        agents = swapHistory[swapKey].currentAgents.slice();
+      }
+
+      // Parse duration from time string e.g. "08:00-12:00"
+      var parts = slot.time.split('-');
+      var s = parts[0].split(':').map(Number);
+      var e = parts[1].split(':').map(Number);
+      var dur = (e[0] + e[1]/60) - (s[0] + s[1]/60);
+
+      agents.forEach(function(agent){
+        if(totals[agent] === undefined) return;
+        if(absent.indexOf(agent) > -1) return; // absent = don't count
+        totals[agent] += dur;
+      });
+    });
+  });
+
+  // Update the bar
+  var bar = document.getElementById('hoursBar');
+  if(!bar) return;
+  ['Avi','Tarja','Mie'].forEach(function(a){
+    var el = document.getElementById('h'+a);
+    if(!el) return;
+    var h = totals[a];
+    var txt = h % 1 === 0 ? h+'t' : h.toFixed(1)+'t';
+    el.textContent = txt;
+    // Show absent note if any day is absent this week
+    var hasAbsent = Object.keys(absentAgents).some(function(di){
+      return absentAgents[di].indexOf(a) > -1;
+    });
+    var note = el.parentNode.querySelector('.absent-note');
+    if(hasAbsent && !note){
+      var n = document.createElement('span');
+      n.className = 'absent-note'; n.textContent = '(fravær)';
+      el.parentNode.appendChild(n);
+    } else if(!hasAbsent && note){
+      note.remove();
+    }
+  });
+}
+
 function render(){
   // Navigator updated via updateNav()
   document.querySelectorAll('.schedule').forEach(function(p,i){
@@ -618,6 +703,7 @@ function render(){
       }
     }
   });
+  calcHours();
 }
 
 // ── Absent toggle button ─────────────────────────────────────────────────────

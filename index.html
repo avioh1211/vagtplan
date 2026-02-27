@@ -436,7 +436,7 @@ function refreshAbsentView(){
     if(whoEl)whoEl.textContent=absentAgent.toUpperCase()+' — FRAVÆRENDE';
     var nTxtEl=document.getElementById('absnoticetxt-'+wi+'-'+di);
     if(nTxtEl)nTxtEl.textContent=absentAgent.toUpperCase()+' ER FRAVÆRENDE HELE DAGEN';
-    col.querySelectorAll('.slot:not(.break-slot) .agent-tag').forEach(function(tag){
+    col.querySelectorAll('.slot .agent-tag').forEach(function(tag){
       if(!isOwner&&tag.classList.contains(absentAgent)){
         tag.classList.add('blanked-absent');
       } else {

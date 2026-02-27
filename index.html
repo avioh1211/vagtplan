@@ -216,6 +216,7 @@
   <button class="iam-btn" data-iam="Mie">MIE</button>
   <div class="iam-sep"></div>
   <button class="absent-btn" id="absentToggle">KLIK FOR AT MARKERE FRI I HELE DAGEN</button>
+  <button class="iam-btn" id="resetBtn" style="margin-left:auto;border-color:rgba(224,80,80,0.4);color:rgba(224,80,80,0.6);font-size:0.8rem;" title="Ryd alle gemte bytter og fravær">↺ RESET</button>
   <span class="iam-hint" id="iamHint">Vælg din rolle for at bytte vagter eller melde fra</span>
 </div>
 <div class="week-nav">
@@ -620,14 +621,14 @@ function acceptSwap(){
   closeModal();
   toast('Byttet: '+activeIam+' → '+swapTarget+' · '+slotTime,false);
   render();
-  fbSaveSwap(wi,di,si,ags,origAgents);
+  fbSaveSwap(wi,di,si,ags,origAgents,swapSlotData.time);
 }
-function fbSaveSwap(wi,di,si,agents,originalAgents){
+function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime){
   if(!window._fbReady)return;
   var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
   var key='swap_'+wi+'_'+di+'_'+si;
   var orig=(swapHistory[key]&&swapHistory[key].originalAgents)?swapHistory[key].originalAgents:originalAgents;
-  fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
+  fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,time:slotTime||'',ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('btnCancel').addEventListener('click',closeModal);
@@ -666,7 +667,7 @@ document.getElementById('btnTakeBack').addEventListener('click',function(){
   updateWeeksSlot(wi,di,si,newAgents);
   closeRegret();closeModal();
   toast('Vagt gendannet til original ✓',false);
-  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents);
+  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time);
   if(JSON.stringify(newAgents.slice().sort())===JSON.stringify(hist.originalAgents.slice().sort()))delete swapHistory['swap_'+wi+'_'+di+'_'+si];
   render();
 });
@@ -707,7 +708,7 @@ document.getElementById('btnRegretConfirmGive').addEventListener('click',functio
   updateWeeksSlot(wi,di,si,newAgents);
   closeRegret();closeModal();
   toast('Vagt givet til '+regretGiveTarget+' ✓',false);
-  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents);
+  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time);
   render();
 });
 document.getElementById('regretClose').addEventListener('click',closeRegret);
@@ -743,10 +744,19 @@ function applyAllChanges(data){
   Object.keys(data).forEach(function(key){
     var val=data[key];if(!val)return;
     if(key.indexOf('swap_')===0){
+      // Validate slot still exists and is not a break before applying saved swap
+      var week=WEEKS[val.wi];
+      if(!week)return;
+      var day=week.days[val.di];
+      if(!day)return;
+      var slot=day.slots[val.si];
+      if(!slot||slot.isBreak)return;
+      // Validate the saved time matches current slot time — rejects stale data from old slot structure
+      if(val.time&&slot.time&&val.time!==slot.time)return;
       swapHistory[key]={wi:val.wi,di:val.di,si:val.si,originalAgents:val.originalAgents||val.agents,currentAgents:val.agents};
       var dedupedAgents=dedup(val.agents);
       applySwap(val.wi,{di:val.di,si:val.si},dedupedAgents);
-      if(WEEKS[val.wi]&&WEEKS[val.wi].days[val.di]){var slots=WEEKS[val.wi].days[val.di].slots;if(slots[val.si])slots[val.si].agents=dedupedAgents;}
+      slot.agents=dedupedAgents;
     }
     if(key.indexOf('absent_')===0){
       absentDays[val.wi+'-'+val.di]=val.agent;
@@ -764,6 +774,20 @@ function startFirebaseSync(){
     if(snapshot.exists())applyAllChanges(snapshot.data());
   },function(err){console.error('Firebase sync error',err);});
 }
+var resetBtn=document.getElementById('resetBtn');
+if(resetBtn){resetBtn.addEventListener('click',function(){
+  if(!confirm('Reset alle gemte bytter og fraværsmarkeringer?\n\nDette rydder databasen for alle brugere.'))return;
+  if(!window._fbReady)return;
+  var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
+  fset(fdoc(db,'vagtplan','changes'),{},{}).then(function(){
+    swapHistory={};absentDays={};
+    // Rebuild UI from scratch with clean data
+    document.getElementById('schedules').innerHTML='';
+    // Re-parse original WEEKS from the embedded data (reload page is simplest)
+    toast('Database ryddet — genindlæser...',false);
+    setTimeout(function(){location.reload();},1500);
+  }).catch(function(e){console.error(e);toast('Fejl ved reset',true);});
+});}
 function showSyncStatus(ok){
   var el=document.getElementById('syncDot');
   if(!el)return;

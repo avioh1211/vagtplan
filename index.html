@@ -163,7 +163,6 @@
   .slot.swappable{cursor:pointer;outline:2.5px dashed var(--today-glow);outline-offset:-2px;}
   .slot.swappable:hover{background:rgba(123,79,212,0.08)!important;}
   .slot.swappable::after{content:'⇄';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.75rem;color:var(--today-glow);opacity:0.55;}
-  /* Enhanced regret-changed slot */
   .regret-changed{outline:2.5px dashed var(--absent-red)!important;outline-offset:-2px;cursor:pointer!important;background:rgba(224,80,80,0.04)!important;background-image:none!important;}
   .regret-changed .slot-time{color:var(--absent-red)!important;opacity:1!important;}
   .regret-changed::after{content:'↩ FORTRYD';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.38rem;font-family:var(--mono);font-weight:700;letter-spacing:0.1em;color:var(--absent-red);opacity:0.85;pointer-events:none;}
@@ -385,6 +384,8 @@ function renderMyChanges(){
       if(day.isHoliday)return;
       day.slots.forEach(function(slot,si){
         if(slot.isBreak)return;
+        var slotObj=day.slots[si];
+        if(!slotObj||slotObj.isBreak)return;
         var key='swap_'+week.wi+'_'+di+'_'+si;
         var hist=swapHistory[key];
         if(!hist)return;
@@ -405,8 +406,8 @@ function renderMyChanges(){
           if(!changed.length)return;
           type='mutual';desc='Ændret bytte';
         }
-        items.push({week:week,di:di,si:si,day:day,slot:slot,type:type,desc:desc,key:key,
-          hist:{wi:week.wi,di:di,si:si,originalAgents:orig,currentAgents:curr,time:slot.time},orig:orig,curr:curr});
+        items.push({week:week,di:di,si:si,day:day,slot:slotObj,type:type,desc:desc,key:key,
+          hist:{wi:week.wi,di:di,si:si,originalAgents:orig,currentAgents:curr,time:slotObj.time},orig:orig,curr:curr});
       });
     });
   });
@@ -701,7 +702,7 @@ document.querySelectorAll('.abtn').forEach(function(btn){
 document.querySelectorAll('.iam-btn').forEach(function(btn){
   btn.addEventListener('click',function(){
     var val=btn.getAttribute('data-iam');
-    if(!val)return; // reset btn
+    if(!val)return;
     if(activeIam===val){
       activeIam='';absentMode=false;
       document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
@@ -749,21 +750,10 @@ function closeModal(){
   document.getElementById('swapModal').classList.remove('open');
   swapSlotEl=null;swapSlotData=null;swapTarget='';
 }
-function applySwap(wi,si,newAgents){
-  var panel=document.getElementById('week-'+wi);
-  if(!panel)return;
-  panel.querySelectorAll('.slot:not(.break-slot)').forEach(function(slot){
-    if(slot.dataset.si===String(si.si)&&slot.dataset.di===String(si.di)&&slot.dataset.wi===String(wi)){
-      slot.dataset.agents=newAgents.join(',');
-      ALL_AGENTS.forEach(function(a){slot.classList.remove('has-'+a);});
-      newAgents.forEach(function(a){slot.classList.add('has-'+a);});
-      var aEl=slot.querySelector('.slot-agents');
-      if(aEl){aEl.innerHTML='';newAgents.forEach(function(a){var t=document.createElement('span');t.className='agent-tag '+a;t.textContent=a.toUpperCase();aEl.appendChild(t);});}
-    }
-  });
-}
+
+// ── FIXED: capture all needed data BEFORE calling closeModal() ──
 function acceptSwap(){
-  if(!swapTarget||!swapSlotEl)return;
+  if(!swapTarget||!swapSlotEl||!swapSlotData)return;
   var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
   var idx=ags.indexOf(activeIam);
   if(idx>-1)ags[idx]=swapTarget;
@@ -771,14 +761,15 @@ function acceptSwap(){
   var wi=parseInt(swapSlotEl.dataset.wi);
   var di=parseInt(swapSlotEl.dataset.di);
   var si=parseInt(swapSlotEl.dataset.si);
-  var slotTime=swapSlotData.time;
-  var origAgents=swapSlotData.agents;
+  var slotTime=swapSlotData.time;      // capture before closeModal() nulls swapSlotData
+  var origAgents=swapSlotData.agents;  // capture before closeModal() nulls swapSlotData
   applySwap(wi,{di:di,si:si},ags);
-  closeModal();
+  closeModal();                         // safe to null swapSlotData now
   toast('Byttet: '+activeIam+' → '+swapTarget+' · '+slotTime,false);
   render();
-  fbSaveSwap(wi,di,si,ags,origAgents,swapSlotData.time);
+  fbSaveSwap(wi,di,si,ags,origAgents,slotTime);
 }
+
 function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime){
   if(!window._fbReady)return;
   var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
@@ -832,7 +823,7 @@ document.getElementById('btnTakeBack').addEventListener('click',function(){
       fset(fdoc(db,'vagtplan','changes'),{[key]:null},{merge:true}).catch(function(e){console.error(e);});
     }
   } else {
-    fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time);
+    fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time||hist.time||'');
   }
   render();
 });
@@ -872,7 +863,7 @@ document.getElementById('btnRegretConfirmGive').addEventListener('click',functio
   updateWeeksSlot(wi,di,si,newAgents);
   closeRegret();closeModal();
   toast('Vagt givet til '+regretGiveTarget+' ✓',false);
-  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time);
+  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time||hist.time||'');
   render();
 });
 document.getElementById('regretClose').addEventListener('click',closeRegret);
@@ -903,6 +894,19 @@ document.getElementById('wnavInput').addEventListener('keydown',function(e){
   if(e.key==='ArrowUp'){e.preventDefault();if(activeWeek<WEEKS.length-1){activeWeek++;render();updateNav();}}
   if(e.key==='ArrowDown'){e.preventDefault();if(activeWeek>0){activeWeek--;render();updateNav();}}
 });
+function applySwap(wi,si,newAgents){
+  var panel=document.getElementById('week-'+wi);
+  if(!panel)return;
+  panel.querySelectorAll('.slot:not(.break-slot)').forEach(function(slot){
+    if(slot.dataset.si===String(si.si)&&slot.dataset.di===String(si.di)&&slot.dataset.wi===String(wi)){
+      slot.dataset.agents=newAgents.join(',');
+      ALL_AGENTS.forEach(function(a){slot.classList.remove('has-'+a);});
+      newAgents.forEach(function(a){slot.classList.add('has-'+a);});
+      var aEl=slot.querySelector('.slot-agents');
+      if(aEl){aEl.innerHTML='';newAgents.forEach(function(a){var t=document.createElement('span');t.className='agent-tag '+a;t.textContent=a.toUpperCase();aEl.appendChild(t);});}
+    }
+  });
+}
 function applyAllChanges(data){
   if(!data)return;
   Object.keys(data).forEach(function(key){
@@ -915,7 +919,7 @@ function applyAllChanges(data){
       var slot=day.slots[val.si];
       if(!slot||slot.isBreak)return;
       if(val.time&&slot.time&&val.time!==slot.time)return;
-      swapHistory[key]={wi:val.wi,di:val.di,si:val.si,originalAgents:val.originalAgents||val.agents,currentAgents:val.agents};
+      swapHistory[key]={wi:val.wi,di:val.di,si:val.si,originalAgents:val.originalAgents||val.agents,currentAgents:val.agents,time:val.time||slot.time||''};
       var dedupedAgents=dedup(val.agents);
       applySwap(val.wi,{di:val.di,si:val.si},dedupedAgents);
       slot.agents=dedupedAgents;

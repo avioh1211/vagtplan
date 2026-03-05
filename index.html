@@ -45,6 +45,41 @@
   .absent-btn:hover{border-color:var(--absent-red);color:var(--absent-red);}
   .absent-btn.active{background:var(--absent-red);color:white;border-color:var(--absent-red);}
   .iam-hint{font-size:0.48rem;letter-spacing:0.1em;color:rgba(255,255,255,0.3);margin-left:auto;font-style:italic;}
+
+  /* ── My Changes Panel ── */
+  .my-changes-panel{display:none;background:#111;border-bottom:4px solid var(--ink);}
+  .my-changes-panel.has-changes{display:block;}
+  .mc-header{display:flex;align-items:center;padding:0.65rem 1.5rem;gap:0.8rem;cursor:pointer;user-select:none;transition:background 0.12s;}
+  .mc-header:hover .mc-header-inner{opacity:1;}
+  .mc-header-inner{display:flex;align-items:center;gap:0.8rem;flex:1;opacity:0.9;transition:opacity 0.12s;}
+  .mc-title{font-family:var(--display);font-size:1rem;letter-spacing:0.14em;color:rgba(255,255,255,0.92);}
+  .mc-count{background:var(--today-glow);color:white;font-size:0.48rem;font-weight:700;letter-spacing:0.1em;padding:0.15rem 0.6rem;border-radius:20px;min-width:1.8rem;text-align:center;transition:background 0.2s;}
+  .mc-count.zero{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);}
+  .mc-toggle{margin-left:auto;background:transparent;border:none;color:rgba(255,255,255,0.3);font-size:0.65rem;cursor:pointer;transition:transform 0.22s,color 0.15s;padding:0;line-height:1;flex-shrink:0;}
+  .mc-toggle.open{transform:rotate(180deg);color:rgba(255,255,255,0.7);}
+  .mc-hint{font-size:0.43rem;letter-spacing:0.09em;color:rgba(255,255,255,0.22);font-style:italic;}
+  .mc-body{display:none;padding:0 1.5rem 1rem;border-top:1px solid rgba(255,255,255,0.07);}
+  .mc-body.open{display:block;animation:fadeIn 0.18s ease;}
+  .mc-empty{font-size:0.5rem;letter-spacing:0.1em;color:rgba(255,255,255,0.22);text-transform:uppercase;padding:1rem 0;text-align:center;font-style:italic;}
+  .mc-week-group{margin-top:0.75rem;}
+  .mc-week-group:first-child{margin-top:0.6rem;}
+  .mc-week-label{font-size:0.41rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.26);margin-bottom:0.4rem;padding-bottom:0.22rem;border-bottom:1px solid rgba(255,255,255,0.07);}
+  .mc-item{display:flex;align-items:center;gap:0.55rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:4px;margin-bottom:0.3rem;transition:background 0.15s,border-color 0.15s;}
+  .mc-item:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);}
+  .mc-item-day{min-width:4.4rem;flex-shrink:0;}
+  .mc-item-dayname{font-family:var(--display);font-size:0.88rem;letter-spacing:0.06em;color:rgba(255,255,255,0.82);line-height:1.1;}
+  .mc-item-date{font-size:0.4rem;color:rgba(255,255,255,0.32);letter-spacing:0.05em;margin-top:0.1rem;}
+  .mc-item-time{font-size:0.46rem;font-weight:700;letter-spacing:0.05em;color:rgba(255,255,255,0.48);background:rgba(255,255,255,0.06);padding:0.14rem 0.48rem;border-radius:3px;white-space:nowrap;flex-shrink:0;}
+  .mc-sep{color:rgba(255,255,255,0.14);font-size:0.8rem;flex-shrink:0;}
+  .mc-item-desc{flex:1;font-size:0.46rem;letter-spacing:0.05em;color:rgba(255,255,255,0.48);line-height:1.4;}
+  .mc-item-desc b{color:rgba(255,255,255,0.82);font-weight:700;}
+  .mc-item-type{font-size:0.37rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.12rem 0.5rem;border-radius:20px;white-space:nowrap;border:1.5px solid;flex-shrink:0;}
+  .mc-item-type.gave{color:#F5A070;border-color:rgba(245,160,112,0.32);background:rgba(245,160,112,0.07);}
+  .mc-item-type.received{color:#85CC66;border-color:rgba(133,204,102,0.32);background:rgba(133,204,102,0.07);}
+  .mc-item-type.mutual{color:#A8CCEA;border-color:rgba(168,204,234,0.32);background:rgba(168,204,234,0.07);}
+  .mc-regret-btn{font-family:var(--display);font-size:0.75rem;letter-spacing:0.08em;padding:0.25rem 0.8rem;border:2px solid rgba(224,80,80,0.38);border-radius:20px;background:transparent;color:rgba(224,80,80,0.65);cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+  .mc-regret-btn:hover{background:var(--absent-red);color:white;border-color:var(--absent-red);}
+
   .hours-bar{background:var(--ink);color:white;padding:10px 20px;border-bottom:4px solid var(--ink);display:flex;justify-content:space-around;font-family:var(--display);font-size:1.2rem;letter-spacing:0.05em;}
   .hours-bar span{opacity:0.8;display:flex;align-items:center;gap:6px;}
   .hours-bar b{color:var(--lime);font-size:1.4rem;opacity:1;}
@@ -128,6 +163,11 @@
   .slot.swappable{cursor:pointer;outline:2.5px dashed var(--today-glow);outline-offset:-2px;}
   .slot.swappable:hover{background:rgba(123,79,212,0.08)!important;}
   .slot.swappable::after{content:'⇄';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.75rem;color:var(--today-glow);opacity:0.55;}
+  /* Enhanced regret-changed slot */
+  .regret-changed{outline:2.5px dashed var(--absent-red)!important;outline-offset:-2px;cursor:pointer!important;background:rgba(224,80,80,0.04)!important;background-image:none!important;}
+  .regret-changed .slot-time{color:var(--absent-red)!important;opacity:1!important;}
+  .regret-changed::after{content:'↩ FORTRYD';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.38rem;font-family:var(--mono);font-weight:700;letter-spacing:0.1em;color:var(--absent-red);opacity:0.85;pointer-events:none;}
+  .regret-changed:hover{background:rgba(224,80,80,0.09)!important;}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,0.7);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;animation:modalIn 0.2s ease;}
   @keyframes modalIn{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
@@ -162,8 +202,6 @@
   .btn-regret-opt#btnTakeBack:hover{background:var(--absent-red);color:white;}
   .btn-regret-opt.btn-regret-give{border-color:var(--today-glow);color:var(--today-glow);}
   .btn-regret-opt.btn-regret-give:hover{background:var(--today-glow);color:white;}
-  .regret-changed{outline:2.5px dashed var(--absent-red);outline-offset:-2px;}
-  .regret-changed::after{content:'↩';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.75rem;color:var(--absent-red);opacity:0.7;}
   .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(4rem);background:#1a1a1a;color:white;padding:0.75rem 1.5rem;border-radius:40px;font-size:0.55rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;z-index:200;transition:transform 0.3s ease,opacity 0.3s ease;opacity:0;pointer-events:none;white-space:nowrap;}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
   .toast.red{background:var(--absent-red);}
@@ -172,7 +210,7 @@
   .legend-item strong{opacity:1;}
   .legend-item.rule-mie{color:#BB2277;opacity:1;}
   @media(max-width:860px){.day-grid{grid-template-columns:repeat(3,1fr);}}
-  @media(max-width:560px){.day-grid{grid-template-columns:1fr 1fr;}.masthead{grid-template-columns:1fr;}.mt-today{border-left:none;border-top:4px solid var(--ink);flex-direction:row;gap:1rem;}}
+  @media(max-width:560px){.day-grid{grid-template-columns:1fr 1fr;}.masthead{grid-template-columns:1fr;}.mt-today{border-left:none;border-top:4px solid var(--ink);flex-direction:row;gap:1rem;}.mc-item{flex-wrap:wrap;}.mc-item-desc{min-width:60%;}}
   @media(max-width:340px){.day-grid{grid-template-columns:1fr;}}
 </style>
 <script type="module">
@@ -219,6 +257,20 @@
   <button class="iam-btn" id="resetBtn" style="margin-left:auto;border-color:rgba(224,80,80,0.4);color:rgba(224,80,80,0.6);font-size:0.8rem;" title="Ryd alle gemte bytter og fravær">↺ RESET</button>
   <span class="iam-hint" id="iamHint">Vælg din rolle for at bytte vagter eller melde fra</span>
 </div>
+
+<!-- ── MY CHANGES PANEL ── -->
+<div class="my-changes-panel" id="myChangesPanel">
+  <div class="mc-header" id="mcHeader">
+    <div class="mc-header-inner">
+      <span class="mc-title">MINE VAGTBYTTER</span>
+      <span class="mc-count zero" id="mcCount">0</span>
+      <span class="mc-hint" id="mcHint">ingen ændringer endnu</span>
+    </div>
+    <button class="mc-toggle" id="mcToggle" aria-label="Vis/skjul mine vagtbytter">▼</button>
+  </div>
+  <div class="mc-body" id="mcBody"></div>
+</div>
+
 <div class="week-nav">
   <button class="wnav-arrow" id="wnavPrev">&#8592;</button>
   <div class="wnav-center">
@@ -243,7 +295,7 @@
   <div class="legend-item"><strong>Pause Avi</strong> 13:00–13:30 → Mie+Tarja dækker</div>
   <div class="legend-item rule-mie"><strong>★ Mie:</strong> ALTID man 15–16 og tor 15–16</div>
   <div class="legend-item"><strong>Fre 15–16 rotation:</strong> Tarja(9) · Avi(10) · Mie(11) · Tarja(12)</div>
-  <div class="legend-item"><strong>Rød:</strong> Fraværsdag</div>
+  <div class="legend-item"><strong>Rød:</strong> Fraværsdag &nbsp;|&nbsp; <strong>Stiplet rød:</strong> Klik slot for at fortryde bytte</div>
 </div>
 <div class="modal-overlay" id="swapModal">
   <div class="modal">
@@ -312,7 +364,110 @@ var ALL_AGENTS=['Avi','Tarja','Mie'];
 var activeWeek=0,activeAgent='',activeIam='',absentMode=false,absentDays={};
 var swapSlotEl=null,swapSlotData=null,swapTarget='',swapHistory={};
 var regretData=null,regretGiveTarget='';
+var mcOpen=false;
 function dedup(arr){var seen={};return arr.filter(function(a){if(seen[a])return false;seen[a]=true;return true;});}
+
+/* ── RENDER MY CHANGES ── */
+function renderMyChanges(){
+  var panel=document.getElementById('myChangesPanel');
+  var body=document.getElementById('mcBody');
+  var countEl=document.getElementById('mcCount');
+  var hintEl=document.getElementById('mcHint');
+  if(!activeIam){
+    panel.classList.remove('has-changes');
+    if(mcOpen){mcOpen=false;body.classList.remove('open');document.getElementById('mcToggle').classList.remove('open');}
+    body.innerHTML='';countEl.textContent='0';countEl.className='mc-count zero';
+    hintEl.textContent='ingen ændringer endnu';return;
+  }
+  var items=[];
+  WEEKS.forEach(function(week){
+    week.days.forEach(function(day,di){
+      if(day.isHoliday)return;
+      day.slots.forEach(function(slot,si){
+        if(slot.isBreak)return;
+        var key='swap_'+week.wi+'_'+di+'_'+si;
+        var hist=swapHistory[key];
+        if(!hist)return;
+        var orig=hist.originalAgents||[];
+        var curr=hist.currentAgents||[];
+        var wasOn=orig.indexOf(activeIam)>-1;
+        var isOn=curr.indexOf(activeIam)>-1;
+        if(!wasOn&&!isOn)return;
+        var type,desc;
+        if(wasOn&&!isOn){
+          var taker=curr.filter(function(a){return orig.indexOf(a)===-1;})[0]||'?';
+          type='gave';desc='Gav til <b>'+taker.toUpperCase()+'</b>';
+        } else if(!wasOn&&isOn){
+          var giver=orig.filter(function(a){return curr.indexOf(a)===-1;})[0]||'?';
+          type='received';desc='Modtog fra <b>'+giver.toUpperCase()+'</b>';
+        } else {
+          var changed=orig.filter(function(a){return curr.indexOf(a)===-1;});
+          if(!changed.length)return;
+          type='mutual';desc='Ændret bytte';
+        }
+        items.push({week:week,di:di,si:si,day:day,slot:slot,type:type,desc:desc,key:key,
+          hist:{wi:week.wi,di:di,si:si,originalAgents:orig,currentAgents:curr,time:slot.time},orig:orig,curr:curr});
+      });
+    });
+  });
+  countEl.textContent=items.length;
+  countEl.className='mc-count'+(items.length===0?' zero':'');
+  hintEl.textContent=items.length===0?'ingen ændringer endnu':items.length+' '+(items.length===1?'bytte':'bytter')+' — klik for at se';
+  if(items.length===0){
+    panel.classList.remove('has-changes');
+    if(mcOpen){mcOpen=false;body.classList.remove('open');document.getElementById('mcToggle').classList.remove('open');}
+    body.innerHTML='<div class="mc-empty">Ingen vagtbytter registreret endnu.</div>';
+    return;
+  }
+  panel.classList.add('has-changes');
+  var byWeek={},weekOrder=[];
+  items.forEach(function(item){
+    var wl=item.week.label;
+    if(!byWeek[wl]){byWeek[wl]={label:wl,range:item.week.range,items:[]};weekOrder.push(wl);}
+    byWeek[wl].items.push(item);
+  });
+  body.innerHTML='';
+  weekOrder.forEach(function(wl){
+    var grp=byWeek[wl];
+    var g=document.createElement('div');g.className='mc-week-group';
+    var wLbl=document.createElement('div');wLbl.className='mc-week-label';
+    wLbl.textContent=grp.label+' · '+grp.range;
+    g.appendChild(wLbl);
+    grp.items.forEach(function(item){
+      var row=document.createElement('div');row.className='mc-item';
+      var dayCol=document.createElement('div');dayCol.className='mc-item-day';
+      var dn=document.createElement('div');dn.className='mc-item-dayname';dn.textContent=item.day.name.toUpperCase();
+      var dd=document.createElement('div');dd.className='mc-item-date';dd.textContent=item.day.date;
+      dayCol.appendChild(dn);dayCol.appendChild(dd);
+      var te=document.createElement('div');te.className='mc-item-time';te.textContent=item.slot.time;
+      var sep=document.createElement('div');sep.className='mc-sep';sep.innerHTML='⇄';
+      var de=document.createElement('div');de.className='mc-item-desc';de.innerHTML=item.desc;
+      var tb=document.createElement('div');tb.className='mc-item-type '+item.type;
+      tb.textContent=item.type==='gave'?'GIVET':item.type==='received'?'MODTAGET':'ÆNDRET';
+      var rb=document.createElement('button');rb.className='mc-regret-btn';rb.textContent='↩ FORTRYD';
+      (function(i){
+        rb.addEventListener('click',function(e){
+          e.stopPropagation();
+          activeWeek=i.week.wi;render();updateNav();
+          setTimeout(function(){
+            openRegret(null,{time:i.slot.time,dayName:i.day.name+' '+i.day.date,
+              agents:i.curr,slotKey:i.key,hist:i.hist});
+          },60);
+        });
+      })(item);
+      row.appendChild(dayCol);row.appendChild(te);row.appendChild(sep);row.appendChild(de);row.appendChild(tb);row.appendChild(rb);
+      g.appendChild(row);
+    });
+    body.appendChild(g);
+  });
+}
+document.getElementById('mcHeader').addEventListener('click',function(){
+  if(!document.getElementById('myChangesPanel').classList.contains('has-changes'))return;
+  mcOpen=!mcOpen;
+  document.getElementById('mcBody').classList.toggle('open',mcOpen);
+  document.getElementById('mcToggle').classList.toggle('open',mcOpen);
+});
+
 function buildUI(){
   var schEl=document.getElementById('schedules');
   WEEKS.forEach(function(week){
@@ -523,6 +678,7 @@ function render(){
   });
   refreshAbsentView();
   calcHours();
+  renderMyChanges();
 }
 var absentToggle=document.getElementById('absentToggle');
 absentToggle.addEventListener('click',function(){
@@ -545,6 +701,7 @@ document.querySelectorAll('.abtn').forEach(function(btn){
 document.querySelectorAll('.iam-btn').forEach(function(btn){
   btn.addEventListener('click',function(){
     var val=btn.getAttribute('data-iam');
+    if(!val)return; // reset btn
     if(activeIam===val){
       activeIam='';absentMode=false;
       document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
@@ -610,7 +767,6 @@ function acceptSwap(){
   var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
   var idx=ags.indexOf(activeIam);
   if(idx>-1)ags[idx]=swapTarget;
-  // Deduplicate: never show same agent twice on a slot
   ags=dedup(ags);
   var wi=parseInt(swapSlotEl.dataset.wi);
   var di=parseInt(swapSlotEl.dataset.di);
@@ -628,6 +784,7 @@ function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime){
   var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
   var key='swap_'+wi+'_'+di+'_'+si;
   var orig=(swapHistory[key]&&swapHistory[key].originalAgents)?swapHistory[key].originalAgents:originalAgents;
+  swapHistory[key]={wi:wi,di:di,si:si,originalAgents:orig,currentAgents:agents,time:slotTime||''};
   fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,time:slotTime||'',ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
@@ -667,8 +824,16 @@ document.getElementById('btnTakeBack').addEventListener('click',function(){
   updateWeeksSlot(wi,di,si,newAgents);
   closeRegret();closeModal();
   toast('Vagt gendannet til original ✓',false);
-  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time);
-  if(JSON.stringify(newAgents.slice().sort())===JSON.stringify(hist.originalAgents.slice().sort()))delete swapHistory['swap_'+wi+'_'+di+'_'+si];
+  var key='swap_'+wi+'_'+di+'_'+si;
+  if(JSON.stringify(newAgents.slice().sort())===JSON.stringify(hist.originalAgents.slice().sort())){
+    delete swapHistory[key];
+    if(window._fbReady){
+      var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
+      fset(fdoc(db,'vagtplan','changes'),{[key]:null},{merge:true}).catch(function(e){console.error(e);});
+    }
+  } else {
+    fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time);
+  }
   render();
 });
 document.getElementById('btnGiveToOther').addEventListener('click',function(){
@@ -701,7 +866,6 @@ document.getElementById('btnRegretConfirmGive').addEventListener('click',functio
   for(var i=0;i<curr.length;i++){if((hist.originalAgents||[]).indexOf(curr[i])===-1){intruder=curr[i];break;}}
   if(intruder){var idx2=newAgents.indexOf(intruder);if(idx2>-1)newAgents[idx2]=regretGiveTarget;}
   else{newAgents.push(regretGiveTarget);}
-  // Deduplicate
   newAgents=dedup(newAgents);
   var wi=hist.wi,di=hist.di,si=hist.si;
   applySwap(wi,{di:di,si:si},newAgents);
@@ -744,14 +908,12 @@ function applyAllChanges(data){
   Object.keys(data).forEach(function(key){
     var val=data[key];if(!val)return;
     if(key.indexOf('swap_')===0){
-      // Validate slot still exists and is not a break before applying saved swap
       var week=WEEKS[val.wi];
       if(!week)return;
       var day=week.days[val.di];
       if(!day)return;
       var slot=day.slots[val.si];
       if(!slot||slot.isBreak)return;
-      // Validate the saved time matches current slot time — rejects stale data from old slot structure
       if(val.time&&slot.time&&val.time!==slot.time)return;
       swapHistory[key]={wi:val.wi,di:val.di,si:val.si,originalAgents:val.originalAgents||val.agents,currentAgents:val.agents};
       var dedupedAgents=dedup(val.agents);
@@ -781,9 +943,6 @@ if(resetBtn){resetBtn.addEventListener('click',function(){
   var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
   fset(fdoc(db,'vagtplan','changes'),{},{}).then(function(){
     swapHistory={};absentDays={};
-    // Rebuild UI from scratch with clean data
-    document.getElementById('schedules').innerHTML='';
-    // Re-parse original WEEKS from the embedded data (reload page is simplest)
     toast('Database ryddet — genindlæser...',false);
     setTimeout(function(){location.reload();},1500);
   }).catch(function(e){console.error(e);toast('Fejl ved reset',true);});
@@ -800,7 +959,7 @@ function refreshToday(){
   var todayStr=now.getDate()+'/'+(now.getMonth()+1);
   var days=['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
   document.querySelector('.tday').textContent=days[now.getDay()];
-  document.querySelector('.tdate').textContent=now.getDate()+'.'+( now.getMonth()+1)+'.'+now.getFullYear();
+  document.querySelector('.tdate').textContent=now.getDate()+'.'+(now.getMonth()+1)+'.'+now.getFullYear();
   var found=false;
   WEEKS.forEach(function(week){
     week.days.forEach(function(day){

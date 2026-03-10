@@ -613,8 +613,6 @@
   }
   @media(max-width:340px){.day-grid{grid-template-columns:1fr;}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init('iYUg8GqcLw4XLaljp');</script>
 <script type="module">
   import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import{getFirestore,doc,setDoc,getDoc,onSnapshot,collection}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -847,44 +845,48 @@ function downloadICS(dateStr,timeStr,giver,receiver){
   document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
-/* ── SEND SWAP EMAILS (FIXED) ── */
+/* ── SEND SWAP EMAILS VIA VERCEL API ── */
+var API_URL='https://YOUR-PROJECT.vercel.app/api/send-swap-email'; // UPDATE AFTER DEPLOY
+
+async function sendOneEmail(toName,toEmail,shiftDate,shiftTime,swapDescription,dateStr,giver,receiver){
+  var resp=await fetch(API_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({toName:toName,toEmail:toEmail,shiftDate:shiftDate,shiftTime:shiftTime,swapDescription:swapDescription,dateStr:dateStr,giver:giver,receiver:receiver})
+  });
+  if(!resp.ok){var err=await resp.json();throw new Error(err.error||'Ukendt fejl');}
+  return resp.json();
+}
+
 function sendSwapEmails(giver,receiver,day,slot){
   var dateFormatted=day.name+' d. '+day.date+' 2026';
-  // Save to local variables so they are safely captured by the setTimeout closure
   var savedGiver=giver;
   var savedReceiver=receiver;
-  emailjs.send('service_3bmk898','template_m97vqah',{
-    to_name:savedGiver,
-    to_email:AGENT_EMAILS[savedGiver],
-    shift_date:dateFormatted,
-    shift_time:slot.time,
-    swap_description:'Du gav din vagt til '+savedReceiver.toUpperCase()
-  }).then(function(){
+  var giverEmail=AGENT_EMAILS[savedGiver];
+  var receiverEmail=AGENT_EMAILS[savedReceiver];
+  if(!giverEmail||!receiverEmail){
+    toast('Fejl: manglende email adresse',true);
+    console.error('Manglende emails:',savedGiver,giverEmail,savedReceiver,receiverEmail);
+    return;
+  }
+  sendOneEmail(
+    savedGiver,giverEmail,dateFormatted,slot.time,
+    'Du gav din vagt til '+savedReceiver.toUpperCase(),
+    day.date,savedGiver,savedReceiver
+  ).then(function(){
     console.log('Mail sendt til '+savedGiver);
-    setTimeout(function(){
-      console.log('Sender til receiver:',savedReceiver,'email:',AGENT_EMAILS[savedReceiver]);
-      var receiverEmail=AGENT_EMAILS[savedReceiver];
-      if(!receiverEmail){toast('Fejl: ingen email for '+savedReceiver,true);return;}
-      emailjs.send('service_3bmk898','template_m97vqah',{
-        to_name:savedReceiver,
-        to_email:receiverEmail,
-        shift_date:dateFormatted,
-        shift_time:slot.time,
-        swap_description:'Du overtager vagt fra '+savedGiver.toUpperCase()
-      }).then(function(){
-        console.log('Mail sendt til '+savedReceiver);
-        toast('Mails sendt til '+savedGiver+' og '+savedReceiver+' ✓',false);
-      }).catch(function(e){
-        console.error('EmailJS fejl for '+savedReceiver,e);
-        toast('Fejl: mail til '+savedReceiver+' ikke sendt',true);
-      });
-    },1000);
+    return sendOneEmail(
+      savedReceiver,receiverEmail,dateFormatted,slot.time,
+      'Du overtager vagt fra '+savedGiver.toUpperCase(),
+      day.date,savedGiver,savedReceiver
+    );
+  }).then(function(){
+    console.log('Mail sendt til '+savedReceiver);
+    toast('Mails sendt til '+savedGiver+' og '+savedReceiver+' ✓',false);
   }).catch(function(e){
-    console.error('EmailJS fejl for '+savedGiver,e);
-    toast('Fejl: mail til '+savedGiver+' ikke sendt',true);
+    console.error('Email fejl:',e);
+    toast('Fejl ved afsendelse: '+e.message,true);
   });
-  // Download ICS immediately
-  downloadICS(day.date,slot.time,savedGiver,savedReceiver);
 }
 
 function renderMyChanges(){

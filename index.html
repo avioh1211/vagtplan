@@ -847,42 +847,44 @@ function downloadICS(dateStr,timeStr,giver,receiver){
   document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
-/* ── SEND SWAP EMAILS ── */
+/* ── SEND SWAP EMAILS (FIXED) ── */
 function sendSwapEmails(giver,receiver,day,slot){
   var dateFormatted=day.name+' d. '+day.date+' 2026';
-  // Send to giver first, then receiver after 1s delay to avoid EmailJS rate limiting
+  // Save to local variables so they are safely captured by the setTimeout closure
+  var savedGiver=giver;
+  var savedReceiver=receiver;
   emailjs.send('service_3bmk898','template_m97vqah',{
-    to_name:giver,
-    to_email:AGENT_EMAILS[giver],
+    to_name:savedGiver,
+    to_email:AGENT_EMAILS[savedGiver],
     shift_date:dateFormatted,
     shift_time:slot.time,
-    swap_description:'Du gav din vagt til '+receiver.toUpperCase()
+    swap_description:'Du gav din vagt til '+savedReceiver.toUpperCase()
   }).then(function(){
-    console.log('Mail sendt til '+giver);
+    console.log('Mail sendt til '+savedGiver);
     setTimeout(function(){
-      console.log('Sender til receiver:',receiver,'email:',AGENT_EMAILS[receiver]);
-      var receiverEmail=AGENT_EMAILS[receiver]||AGENT_EMAILS[receiver.trim()];
-      if(!receiverEmail){toast('Fejl: ingen email for '+receiver,true);return;}
+      console.log('Sender til receiver:',savedReceiver,'email:',AGENT_EMAILS[savedReceiver]);
+      var receiverEmail=AGENT_EMAILS[savedReceiver];
+      if(!receiverEmail){toast('Fejl: ingen email for '+savedReceiver,true);return;}
       emailjs.send('service_3bmk898','template_m97vqah',{
-        to_name:receiver,
+        to_name:savedReceiver,
         to_email:receiverEmail,
         shift_date:dateFormatted,
         shift_time:slot.time,
-        swap_description:'Du overtager vagt fra '+giver.toUpperCase()
+        swap_description:'Du overtager vagt fra '+savedGiver.toUpperCase()
       }).then(function(){
-        console.log('Mail sendt til '+receiver);
-        toast('Mails sendt til '+giver+' og '+receiver+' ✓',false);
+        console.log('Mail sendt til '+savedReceiver);
+        toast('Mails sendt til '+savedGiver+' og '+savedReceiver+' ✓',false);
       }).catch(function(e){
-        console.error('EmailJS fejl for '+receiver,e);
-        toast('Fejl: mail til '+receiver+' ikke sendt',true);
+        console.error('EmailJS fejl for '+savedReceiver,e);
+        toast('Fejl: mail til '+savedReceiver+' ikke sendt',true);
       });
     },1000);
   }).catch(function(e){
-    console.error('EmailJS fejl for '+giver,e);
-    toast('Fejl: mail til '+giver+' ikke sendt',true);
+    console.error('EmailJS fejl for '+savedGiver,e);
+    toast('Fejl: mail til '+savedGiver+' ikke sendt',true);
   });
   // Download ICS immediately
-  downloadICS(day.date,slot.time,giver,receiver);
+  downloadICS(day.date,slot.time,savedGiver,savedReceiver);
 }
 
 function renderMyChanges(){
@@ -1292,7 +1294,6 @@ async function handlePinComplete(){
       document.getElementById('pinError').textContent='';
       updatePinDots();
     } else {
-      // ── FIX: gem agent inden closePinModal nulstiller den ──
       var loginAgent=pinAgent;
       closePinModal();
       activateIam(loginAgent);
@@ -1315,7 +1316,6 @@ async function handlePinComplete(){
       document.getElementById('pinInfo').textContent='Vælg en ny PIN-kode (4 cifre):';
       return;
     }
-    // ── FIX: gem agent og state INDEN closePinModal nulstiller dem ──
     var savedAgent=pinAgent;
     var savedState=pinState;
     var newHash=await sha256(entered);
@@ -1429,7 +1429,6 @@ function acceptSwap(){
   closeModal();
   render();
   fbSaveSwap(wi,di,si,ags,origAgents,slotTime);
-  // Send emails + download ICS
   var swapDay=WEEKS[wi].days[di];
   var swapSlotObj=WEEKS[wi].days[di].slots[si];
   sendSwapEmails(activeIam,swapTarget,swapDay,swapSlotObj);

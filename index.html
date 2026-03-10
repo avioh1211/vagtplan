@@ -860,9 +860,12 @@ function sendSwapEmails(giver,receiver,day,slot){
   }).then(function(){
     console.log('Mail sendt til '+giver);
     setTimeout(function(){
+      console.log('Sender til receiver:',receiver,'email:',AGENT_EMAILS[receiver]);
+      var receiverEmail=AGENT_EMAILS[receiver]||AGENT_EMAILS[receiver.trim()];
+      if(!receiverEmail){toast('Fejl: ingen email for '+receiver,true);return;}
       emailjs.send('service_3bmk898','template_m97vqah',{
         to_name:receiver,
-        to_email:AGENT_EMAILS[receiver],
+        to_email:receiverEmail,
         shift_date:dateFormatted,
         shift_time:slot.time,
         swap_description:'Du overtager vagt fra '+giver.toUpperCase()

@@ -1213,8 +1213,10 @@ async function handlePinComplete(){
       document.getElementById('pinError').textContent='';
       updatePinDots();
     } else {
+      // ── FIX: gem agent inden closePinModal nulstiller den ──
+      var loginAgent=pinAgent;
       closePinModal();
-      activateIam(pinAgent);
+      activateIam(loginAgent);
     }
 
   } else if(pinState==='set-new'||pinState==='change-new'){

@@ -1,7 +1,8 @@
-const { Resend } = require('resend');
+import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-from: 'Vagtplanen <noreply@vagtplan.resend.dev>'
+const FROM_ADDRESS = 'Vagtplanen <noreply@vagtplan.resend.dev>';
+
 function generateICS(dateStr, timeStr, giver, receiver) {
   // Parse date like "10/3" and time like "15:00-16:00"
   const [day, month] = dateStr.split('/').map(Number);
@@ -135,7 +136,6 @@ function generateEmailHTML(toName, shiftDate, shiftTime, swapDescription) {
 }
 
 export default async function handler(req, res) {
-  // Allow CORS from your GitHub Pages domain
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -159,7 +159,7 @@ export default async function handler(req, res) {
     const icsBase64 = Buffer.from(icsContent).toString('base64');
 
     const result = await resend.emails.send({
-      from: 'Vagtplanen <vagtplan@yourdomain.com>', // ← UPDATE THIS
+      from: FROM_ADDRESS,
       to: toEmail,
       subject: `Vagtbytte bekræftet — ${shiftDate}`,
       html: generateEmailHTML(toName, shiftDate, shiftTime, swapDescription),

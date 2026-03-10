@@ -1,7 +1,7 @@
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-from: 'Vagtplanen <onboarding@resend.dev>'
+from: 'Vagtplanen <noreply@vagtplan.resend.dev>'
 function generateICS(dateStr, timeStr, giver, receiver) {
   // Parse date like "10/3" and time like "15:00-16:00"
   const [day, month] = dateStr.split('/').map(Number);

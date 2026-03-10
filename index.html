@@ -613,6 +613,8 @@
   }
   @media(max-width:340px){.day-grid{grid-template-columns:1fr;}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('iYUg8GqcLw4XLaljp');</script>
 <script type="module">
   import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import{getFirestore,doc,setDoc,getDoc,onSnapshot,collection}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -805,6 +807,72 @@ var swapSlotEl=null,swapSlotData=null,swapTarget='',swapHistory={};
 var regretData=null,regretGiveTarget='';
 var mcOpen=false;
 function dedup(arr){var seen={};return arr.filter(function(a){if(seen[a])return false;seen[a]=true;return true;});}
+
+/* ── AGENT EMAILS ── */
+var AGENT_EMAILS={Avi:'aoh@lruddannelse.dk',Tarja:'tak@lruddannelse.dk',Mie:'mie.aagaard@lruddannelse.dk'};
+
+/* ── ICS GENERATOR ── */
+function parseDateForICS(dateStr,timeStr){
+  var dp=dateStr.split('/');
+  var day=parseInt(dp[0]),month=parseInt(dp[1])-1,year=2026;
+  var tp=timeStr.split('-');
+  var sh=parseInt(tp[0].split(':')[0]),sm=parseInt(tp[0].split(':')[1]);
+  var eh=parseInt(tp[1].split(':')[0]),em=parseInt(tp[1].split(':')[1]);
+  return{start:new Date(year,month,day,sh,sm,0),end:new Date(year,month,day,eh,em,0)};
+}
+function fmtICS(d){
+  return d.getFullYear()+
+    String(d.getMonth()+1).padStart(2,'0')+
+    String(d.getDate()).padStart(2,'0')+'T'+
+    String(d.getHours()).padStart(2,'0')+
+    String(d.getMinutes()).padStart(2,'0')+'00';
+}
+function downloadICS(dateStr,timeStr,giver,receiver){
+  var dt=parseDateForICS(dateStr,timeStr);
+  var desc='Vagtbytte: '+giver+' gav vagt til '+receiver;
+  var ics=[
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Vagtplan 2026//DK',
+    'BEGIN:VEVENT',
+    'DTSTART:'+fmtICS(dt.start),
+    'DTEND:'+fmtICS(dt.end),
+    'SUMMARY:Vagt '+timeStr,
+    'DESCRIPTION:'+desc,
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  var blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='vagt_'+dateStr.replace('/','_')+'.ics';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+/* ── SEND SWAP EMAILS ── */
+function sendSwapEmails(giver,receiver,day,slot){
+  var dateFormatted=day.name+' d. '+day.date+' 2026';
+  var agents=[
+    {name:giver,email:AGENT_EMAILS[giver],desc:'Du gav din vagt til '+receiver.toUpperCase()},
+    {name:receiver,email:AGENT_EMAILS[receiver],desc:'Du overtager vagt fra '+giver.toUpperCase()}
+  ];
+  agents.forEach(function(ag){
+    if(!ag.email)return;
+    emailjs.send('service_3bmk898','template_m97vqah',{
+      to_name:ag.name,
+      to_email:ag.email,
+      shift_date:dateFormatted,
+      shift_time:slot.time,
+      swap_description:ag.desc
+    }).then(function(){
+      console.log('Mail sendt til '+ag.name);
+    }).catch(function(e){
+      console.error('EmailJS fejl for '+ag.name,e);
+      toast('Fejl ved afsendelse af mail til '+ag.name,true);
+    });
+  });
+  // Download ICS for current user
+  downloadICS(day.date,slot.time,giver,receiver);
+  toast('Bytte bekræftet — mail sendt + kalender downloadet ✓',false);
+}
 
 function renderMyChanges(){
   var panel=document.getElementById('myChangesPanel');
@@ -1348,9 +1416,12 @@ function acceptSwap(){
   var origAgents=swapSlotData.agents;
   applySwap(wi,{di:di,si:si},ags);
   closeModal();
-  toast('Byttet: '+activeIam+' → '+swapTarget+' · '+slotTime,false);
   render();
   fbSaveSwap(wi,di,si,ags,origAgents,slotTime);
+  // Send emails + download ICS
+  var swapDay=WEEKS[wi].days[di];
+  var swapSlotObj=WEEKS[wi].days[di].slots[si];
+  sendSwapEmails(activeIam,swapTarget,swapDay,swapSlotObj);
 }
 function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime){
   if(!window._fbReady)return;

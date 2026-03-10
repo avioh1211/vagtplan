@@ -846,7 +846,7 @@ function downloadICS(dateStr,timeStr,giver,receiver){
 }
 
 /* ── SEND SWAP EMAILS VIA VERCEL API ── */
-var API_URL='https://YOUR-PROJECT.vercel.app/api/send-swap-email'; // UPDATE AFTER DEPLOY
+var API_URL='https://vagtplan-green.vercel.app/api/send-swap-email';
 
 async function sendOneEmail(toName,toEmail,shiftDate,shiftTime,swapDescription,dateStr,giver,receiver){
   var resp=await fetch(API_URL,{

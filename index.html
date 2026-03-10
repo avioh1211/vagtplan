@@ -850,28 +850,36 @@ function downloadICS(dateStr,timeStr,giver,receiver){
 /* ── SEND SWAP EMAILS ── */
 function sendSwapEmails(giver,receiver,day,slot){
   var dateFormatted=day.name+' d. '+day.date+' 2026';
-  var agents=[
-    {name:giver,email:AGENT_EMAILS[giver],desc:'Du gav din vagt til '+receiver.toUpperCase()},
-    {name:receiver,email:AGENT_EMAILS[receiver],desc:'Du overtager vagt fra '+giver.toUpperCase()}
-  ];
-  agents.forEach(function(ag){
-    if(!ag.email)return;
-    emailjs.send('service_3bmk898','template_m97vqah',{
-      to_name:ag.name,
-      to_email:ag.email,
-      shift_date:dateFormatted,
-      shift_time:slot.time,
-      swap_description:ag.desc
-    }).then(function(){
-      console.log('Mail sendt til '+ag.name);
-    }).catch(function(e){
-      console.error('EmailJS fejl for '+ag.name,e);
-      toast('Fejl ved afsendelse af mail til '+ag.name,true);
-    });
+  // Send to giver first, then receiver after 1s delay to avoid EmailJS rate limiting
+  emailjs.send('service_3bmk898','template_m97vqah',{
+    to_name:giver,
+    to_email:AGENT_EMAILS[giver],
+    shift_date:dateFormatted,
+    shift_time:slot.time,
+    swap_description:'Du gav din vagt til '+receiver.toUpperCase()
+  }).then(function(){
+    console.log('Mail sendt til '+giver);
+    setTimeout(function(){
+      emailjs.send('service_3bmk898','template_m97vqah',{
+        to_name:receiver,
+        to_email:AGENT_EMAILS[receiver],
+        shift_date:dateFormatted,
+        shift_time:slot.time,
+        swap_description:'Du overtager vagt fra '+giver.toUpperCase()
+      }).then(function(){
+        console.log('Mail sendt til '+receiver);
+        toast('Mails sendt til '+giver+' og '+receiver+' ✓',false);
+      }).catch(function(e){
+        console.error('EmailJS fejl for '+receiver,e);
+        toast('Fejl: mail til '+receiver+' ikke sendt',true);
+      });
+    },1000);
+  }).catch(function(e){
+    console.error('EmailJS fejl for '+giver,e);
+    toast('Fejl: mail til '+giver+' ikke sendt',true);
   });
-  // Download ICS for current user
+  // Download ICS immediately
   downloadICS(day.date,slot.time,giver,receiver);
-  toast('Bytte bekræftet — mail sendt + kalender downloadet ✓',false);
 }
 
 function renderMyChanges(){

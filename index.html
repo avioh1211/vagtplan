@@ -1418,7 +1418,10 @@ function acceptSwap(){
   if(!swapTarget||!swapSlotEl||!swapSlotData)return;
   var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
   var idx=ags.indexOf(activeIam);
-  if(idx>-1)ags[idx]=swapTarget;
+  // Save all needed values BEFORE closeModal() clears them
+  var confirmedGiver=activeIam;
+  var confirmedReceiver=swapTarget;
+  if(idx>-1)ags[idx]=confirmedReceiver;
   ags=dedup(ags);
   var wi=parseInt(swapSlotEl.dataset.wi);
   var di=parseInt(swapSlotEl.dataset.di);
@@ -1431,7 +1434,7 @@ function acceptSwap(){
   fbSaveSwap(wi,di,si,ags,origAgents,slotTime);
   var swapDay=WEEKS[wi].days[di];
   var swapSlotObj=WEEKS[wi].days[di].slots[si];
-  sendSwapEmails(activeIam,swapTarget,swapDay,swapSlotObj);
+  sendSwapEmails(confirmedGiver,confirmedReceiver,swapDay,swapSlotObj);
 }
 function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime){
   if(!window._fbReady)return;

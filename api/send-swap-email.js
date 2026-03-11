@@ -3,38 +3,6 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_ADDRESS = 'Vagtplanen <noreply@vagtplan.resend.dev>';
 
-function generateICS(dateStr, timeStr, giver, receiver) {
-  // Parse date like "10/3" and time like "15:00-16:00"
-  const [day, month] = dateStr.split('/').map(Number);
-  const [startTime, endTime] = timeStr.split('-');
-  const [sh, sm] = startTime.split(':').map(Number);
-  const [eh, em] = endTime.split(':').map(Number);
-
-  const pad = (n) => String(n).padStart(2, '0');
-  const year = 2026;
-
-  const dtStart = `${year}${pad(month)}${pad(day)}T${pad(sh)}${pad(sm)}00`;
-  const dtEnd   = `${year}${pad(month)}${pad(day)}T${pad(eh)}${pad(em)}00`;
-  const uid     = `vagtbytte-${dateStr.replace('/','')}-${timeStr.replace(/[:-]/g,'')}-${Date.now()}@vagtplan`;
-
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Vagtplan 2026//DK',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `UID:${uid}`,
-    `DTSTART:${dtStart}`,
-    `DTEND:${dtEnd}`,
-    `SUMMARY:Vagt ${timeStr}`,
-    `DESCRIPTION:Vagtbytte: ${giver} gav vagt til ${receiver}`,
-    `ORGANIZER:mailto:vagtplan@lruddannelse.dk`,
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\r\n');
-}
-
 function generateEmailHTML(toName, shiftDate, shiftTime, swapDescription) {
   return `<!DOCTYPE html>
 <html lang="da">
@@ -67,7 +35,7 @@ function generateEmailHTML(toName, shiftDate, shiftTime, swapDescription) {
 
           <!-- DETAILS BOX -->
           <tr>
-            <td style="padding:24px 32px;">
+            <td style="padding:24px 32px 32px 32px;">
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8F8;border:3px solid #9B7FCC;border-radius:4px;">
                 <tr>
                   <td style="padding:8px 20px;border-bottom:2px solid #C8B4E8;">
@@ -105,20 +73,6 @@ function generateEmailHTML(toName, shiftDate, shiftTime, swapDescription) {
             </td>
           </tr>
 
-          <!-- CALENDAR NOTE -->
-          <tr>
-            <td style="padding:0 32px 32px 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#C8E8A0;border:3px solid #85BB45;border-radius:4px;">
-                <tr>
-                  <td style="padding:14px 20px;">
-                    <span style="font-size:18px;">📎</span>
-                    <span style="font-size:12px;color:#1a1a1a;margin-left:10px;">Kalenderinvitation er vedhæftet — åbn den vedhæftede <strong>.ics fil</strong> for at tilføje vagten til din kalender.</span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
           <!-- FOOTER -->
           <tr>
             <td style="background:#1a1a1a;padding:20px 32px;border-top:4px solid #1a1a1a;">
@@ -148,28 +102,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { toName, toEmail, shiftDate, shiftTime, swapDescription, dateStr, giver, receiver } = req.body;
+  const { toName, toEmail, shiftDate, shiftTime, swapDescription } = req.body;
 
   if (!toName || !toEmail || !shiftDate || !shiftTime) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    const icsContent = generateICS(dateStr, shiftTime, giver, receiver);
-    const icsBase64 = Buffer.from(icsContent).toString('base64');
-
     const result = await resend.emails.send({
       from: FROM_ADDRESS,
       to: toEmail,
       subject: `Vagtbytte bekræftet — ${shiftDate}`,
       html: generateEmailHTML(toName, shiftDate, shiftTime, swapDescription),
-      attachments: [
-        {
-          filename: `vagt_${dateStr.replace('/', '_')}.ics`,
-          content: icsBase64,
-          type: 'text/calendar',
-        }
-      ]
     });
 
     return res.status(200).json({ success: true, id: result.id });

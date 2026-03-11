@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vagtplan 2026</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('iYUg8GqcLw4XLaljp');</script>
 <style>
   :root {
     --ink:#1a1a1a;--cream:#FFF9F2;--lavender:#C8B4E8;--lav-dark:#9B7FCC;
@@ -846,18 +847,10 @@ function downloadICS(dateStr,timeStr,giver,receiver){
   document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
-/* ── SEND SWAP EMAILS VIA VERCEL API ── */
-var API_URL='https://vagtplan-green.vercel.app/api/send-swap-email';
-
-async function sendOneEmail(toName,toEmail,shiftDate,shiftTime,swapDescription,dateStr,giver,receiver){
-  var resp=await fetch(API_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({toName:toName,toEmail:toEmail,shiftDate:shiftDate,shiftTime:shiftTime,swapDescription:swapDescription,dateStr:dateStr,giver:giver,receiver:receiver})
-  });
-  if(!resp.ok){var err=await resp.json();throw new Error(err.error||'Ukendt fejl');}
-  return resp.json();
-}
+/* ── SEND SWAP EMAILS VIA EMAILJS ── */
+var EMAILJS_SERVICE='service_3bmk898';
+var EMAILJS_PERSONAL_TEMPLATE='wdsmjqe';
+var EMAILJS_TEAMS_TEMPLATE='template_k6zw4nc';
 
 function sendSwapEmails(giver,receiver,day,slot){
   var dateFormatted=day.name+' d. '+day.date+' 2026';
@@ -870,19 +863,34 @@ function sendSwapEmails(giver,receiver,day,slot){
     console.error('Manglende emails:',savedGiver,giverEmail,savedReceiver,receiverEmail);
     return;
   }
-  sendOneEmail(
-    savedGiver,giverEmail,dateFormatted,slot.time,
-    'Du gav din vagt til '+savedReceiver.toUpperCase(),
-    day.date,savedGiver,savedReceiver
-  ).then(function(){
+  // 1. Email to giver
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_PERSONAL_TEMPLATE, {
+    to_name: savedGiver,
+    to_email: giverEmail,
+    shift_date: dateFormatted,
+    shift_time: slot.time,
+    swap_description: 'Du gav din vagt til '+savedReceiver.toUpperCase()
+  }).then(function(){
     console.log('Mail sendt til '+savedGiver);
-    return sendOneEmail(
-      savedReceiver,receiverEmail,dateFormatted,slot.time,
-      'Du overtager vagt fra '+savedGiver.toUpperCase(),
-      day.date,savedGiver,savedReceiver
-    );
+    // 2. Email to receiver
+    return emailjs.send(EMAILJS_SERVICE, EMAILJS_PERSONAL_TEMPLATE, {
+      to_name: savedReceiver,
+      to_email: receiverEmail,
+      shift_date: dateFormatted,
+      shift_time: slot.time,
+      swap_description: 'Du overtager vagt fra '+savedGiver.toUpperCase()
+    });
   }).then(function(){
     console.log('Mail sendt til '+savedReceiver);
+    // 3. Teams channel notification
+    return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEAMS_TEMPLATE, {
+      giver: savedGiver,
+      receiver: savedReceiver,
+      shiftDate: dateFormatted,
+      shiftTime: slot.time
+    });
+  }).then(function(){
+    console.log('Teams notifikation sendt');
     toast('Mails sendt til '+savedGiver+' og '+savedReceiver+' ✓',false);
   }).catch(function(e){
     console.error('Email fejl:',e);

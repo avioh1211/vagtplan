@@ -228,6 +228,7 @@
     border-radius:6px;
     margin-bottom:0.4rem;
     transition:background 0.15s,border-color 0.15s;
+    flex-wrap:wrap;
   }
   .mc-item:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.18);}
 
@@ -265,6 +266,20 @@
     line-height:1.5;
   }
   .mc-item-desc b{color:rgba(255,255,255,0.88);font-weight:700;}
+  .mc-item-comment{
+    width:100%;
+    margin-top:0.35rem;
+    padding:0.4rem 0.7rem;
+    background:rgba(255,255,255,0.05);
+    border-left:2.5px solid rgba(123,79,212,0.5);
+    border-radius:0 3px 3px 0;
+    font-size:0.6rem;
+    letter-spacing:0.04em;
+    color:rgba(255,255,255,0.45);
+    line-height:1.5;
+    font-style:italic;
+  }
+  .mc-item-comment::before{content:'💬 ';font-style:normal;}
   .mc-item-type{
     font-size:0.52rem;
     font-weight:700;
@@ -513,6 +528,58 @@
   .regret-changed::after{content:'↩ FORTRYD';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.48rem;font-family:var(--mono);font-weight:700;letter-spacing:0.1em;color:var(--absent-red);opacity:0.85;pointer-events:none;}
   .regret-changed:hover{background:rgba(224,80,80,0.09)!important;}
 
+  /* ══ SWAP COMMENT ══ */
+  .swap-comment-wrap{margin-top:1.1rem;}
+  .swap-comment-label{
+    font-size:0.6rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    opacity:0.5;
+    margin-bottom:0.45rem;
+    display:block;
+  }
+  .swap-comment-input{
+    width:100%;
+    font-family:var(--mono);
+    font-size:0.78rem;
+    letter-spacing:0.03em;
+    color:var(--ink);
+    background:var(--cream);
+    border:2.5px solid var(--ink);
+    border-radius:3px;
+    padding:0.65rem 0.9rem;
+    resize:vertical;
+    min-height:4.5rem;
+    max-height:10rem;
+    outline:none;
+    transition:border-color 0.15s,box-shadow 0.15s;
+    line-height:1.55;
+  }
+  .swap-comment-input:focus{border-color:var(--today-glow);box-shadow:0 0 0 2px rgba(123,79,212,0.12);}
+  .swap-comment-input::placeholder{opacity:0.38;}
+  .swap-comment-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:0.3rem;
+  }
+  .swap-comment-hint{
+    font-size:0.55rem;
+    letter-spacing:0.07em;
+    color:var(--ink);
+    opacity:0.35;
+    font-style:italic;
+  }
+  .swap-comment-char{
+    font-size:0.55rem;
+    letter-spacing:0.08em;
+    color:var(--ink);
+    opacity:0.3;
+    transition:color 0.15s,opacity 0.15s;
+  }
+  .swap-comment-char.near-limit{color:#D4A870;opacity:0.85;}
+  .swap-comment-char.at-limit{color:var(--absent-red);opacity:1;}
+
   /* ══ MODALS ══ */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,0.72);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;animation:modalIn 0.2s ease;}
@@ -738,6 +805,8 @@
   <div class="legend-item"><strong>Fre 15–16 rotation:</strong> Tarja(9) · Avi(10) · Mie(11) · Tarja(12)</div>
   <div class="legend-item"><strong>Rød:</strong> Fraværsdag &nbsp;|&nbsp; <strong>Stiplet rød:</strong> Klik slot for at fortryde bytte</div>
 </div>
+
+<!-- ── SWAP MODAL ── -->
 <div class="modal-overlay" id="swapModal">
   <div class="modal">
     <div class="modal-header">
@@ -752,6 +821,22 @@
       </div>
       <div class="modal-step">VÆLG HVEM DU VIL BYTTE MED</div>
       <div class="swap-options" id="swapOptions"></div>
+
+      <!-- ── COMMENT FIELD ── -->
+      <div class="swap-comment-wrap">
+        <label class="swap-comment-label" for="swapComment">KOMMENTAR (valgfrit)</label>
+        <textarea
+          class="swap-comment-input"
+          id="swapComment"
+          maxlength="280"
+          placeholder="F.eks. lægeaftale, ferie, privat ærinde…"
+        ></textarea>
+        <div class="swap-comment-footer">
+          <span class="swap-comment-hint">Vises i mail til begge parter og i Teams-kanalen</span>
+          <span class="swap-comment-char" id="swapCommentChar">0 / 280</span>
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="btn-cancel" id="btnCancel">ANNULLER</button>
         <button class="btn-accept" id="btnAccept">ACCEPTER BYTTE ✓</button>
@@ -759,6 +844,8 @@
     </div>
   </div>
 </div>
+
+<!-- ── REGRET MODAL ── -->
 <div class="modal-overlay" id="regretModal">
   <div class="modal">
     <div class="modal-header" style="background:#E05050;">
@@ -852,10 +939,12 @@ var EMAILJS_SERVICE='service_3bmk898';
 var EMAILJS_PERSONAL_TEMPLATE='template_m97vqah';
 var EMAILJS_TEAMS_TEMPLATE='template_k6zw4nc';
 
-function sendSwapEmails(giver,receiver,day,slot){
+// comment param is optional — included in all 3 sends (giver, receiver, Teams channel)
+function sendSwapEmails(giver,receiver,day,slot,comment){
   var dateFormatted=day.name+' d. '+day.date+' 2026';
   var savedGiver=giver;
   var savedReceiver=receiver;
+  var savedComment=(comment||'').trim();
   var giverEmail=AGENT_EMAILS[savedGiver];
   var receiverEmail=AGENT_EMAILS[savedReceiver];
   if(!giverEmail||!receiverEmail){
@@ -869,7 +958,8 @@ function sendSwapEmails(giver,receiver,day,slot){
     to_email: giverEmail,
     shift_date: dateFormatted,
     shift_time: slot.time,
-    swap_description: 'Du gav din vagt til '+savedReceiver.toUpperCase()
+    swap_description: 'Du gav din vagt til '+savedReceiver.toUpperCase(),
+    comment: savedComment
   }).then(function(){
     console.log('Mail sendt til '+savedGiver);
     // 2. Email to receiver
@@ -878,7 +968,8 @@ function sendSwapEmails(giver,receiver,day,slot){
       to_email: receiverEmail,
       shift_date: dateFormatted,
       shift_time: slot.time,
-      swap_description: 'Du overtager vagt fra '+savedGiver.toUpperCase()
+      swap_description: 'Du overtager vagt fra '+savedGiver.toUpperCase(),
+      comment: savedComment
     });
   }).then(function(){
     console.log('Mail sendt til '+savedReceiver);
@@ -887,7 +978,8 @@ function sendSwapEmails(giver,receiver,day,slot){
       giver: savedGiver,
       receiver: savedReceiver,
       shiftDate: dateFormatted,
-      shiftTime: slot.time
+      shiftTime: slot.time,
+      comment: savedComment
     });
   }).then(function(){
     console.log('Teams notifikation sendt');
@@ -923,8 +1015,8 @@ function renderMyChanges(){
         else{desc='<b>'+received[0].toUpperCase()+'</b> overtog';}
         var type=gave.length&&received.length?'mutual':gave.length?'gave':'received';
         items.push({week:week,di:di,si:si,day:day,slot:slot,type:type,desc:desc,key:key,
-          hist:{wi:week.wi,di:di,si:si,originalAgents:orig,currentAgents:curr,time:slot.time},
-          orig:orig,curr:curr});
+          hist:{wi:week.wi,di:di,si:si,originalAgents:orig,currentAgents:curr,time:slot.time,comment:hist.comment||''},
+          orig:orig,curr:curr,comment:hist.comment||''});
       });
     });
   });
@@ -983,6 +1075,13 @@ function renderMyChanges(){
         })(item);
       }
       row.appendChild(dayCol);row.appendChild(te);row.appendChild(sep);row.appendChild(de);row.appendChild(tb);row.appendChild(rb);
+      // Show comment if present
+      if(item.comment){
+        var commentEl=document.createElement('div');
+        commentEl.className='mc-item-comment';
+        commentEl.textContent=item.comment;
+        row.appendChild(commentEl);
+      }
       g.appendChild(row);
     });
     body.appendChild(g);
@@ -993,6 +1092,14 @@ document.getElementById('mcHeader').addEventListener('click',function(){
   mcOpen=!mcOpen;
   document.getElementById('mcBody').classList.toggle('open',mcOpen);
   document.getElementById('mcToggle').classList.toggle('open',mcOpen);
+});
+
+// ── COMMENT CHAR COUNTER ──
+document.getElementById('swapComment').addEventListener('input',function(){
+  var len=this.value.length;
+  var charEl=document.getElementById('swapCommentChar');
+  charEl.textContent=len+' / 280';
+  charEl.className='swap-comment-char'+(len>=260?' near-limit':'')+(len>=280?' at-limit':'');
 });
 
 function buildUI(){
@@ -1403,6 +1510,9 @@ function openSwap(slotEl,data){
   swapSlotEl=slotEl;swapSlotData=data;swapTarget='';
   document.getElementById('swapSlotTime').textContent=data.time;
   document.getElementById('swapSlotDay').textContent='Din vagt · '+data.dayName;
+  // Reset comment field
+  var commentEl=document.getElementById('swapComment');
+  if(commentEl){commentEl.value='';document.getElementById('swapCommentChar').textContent='0 / 280';document.getElementById('swapCommentChar').className='swap-comment-char';}
   var opts=document.getElementById('swapOptions');opts.innerHTML='';
   ALL_AGENTS.filter(function(a){return a!==activeIam;}).forEach(function(agent){
     var btn=document.createElement('button');btn.className='swap-agent-btn';btn.dataset.swap=agent;
@@ -1423,6 +1533,8 @@ function openSwap(slotEl,data){
 }
 function closeModal(){
   document.getElementById('swapModal').classList.remove('open');
+  var commentEl=document.getElementById('swapComment');
+  if(commentEl){commentEl.value='';document.getElementById('swapCommentChar').textContent='0 / 280';document.getElementById('swapCommentChar').className='swap-comment-char';}
   swapSlotEl=null;swapSlotData=null;swapTarget='';
 }
 function acceptSwap(){
@@ -1432,6 +1544,8 @@ function acceptSwap(){
   // Save all needed values BEFORE closeModal() clears them
   var confirmedGiver=activeIam;
   var confirmedReceiver=swapTarget;
+  // Capture comment before modal closes
+  var commentVal=(document.getElementById('swapComment').value||'').trim();
   if(idx>-1)ags[idx]=confirmedReceiver;
   ags=dedup(ags);
   var wi=parseInt(swapSlotEl.dataset.wi);
@@ -1442,18 +1556,18 @@ function acceptSwap(){
   applySwap(wi,{di:di,si:si},ags);
   closeModal();
   render();
-  fbSaveSwap(wi,di,si,ags,origAgents,slotTime);
+  fbSaveSwap(wi,di,si,ags,origAgents,slotTime,commentVal);
   var swapDay=WEEKS[wi].days[di];
   var swapSlotObj=WEEKS[wi].days[di].slots[si];
-  sendSwapEmails(confirmedGiver,confirmedReceiver,swapDay,swapSlotObj);
+  sendSwapEmails(confirmedGiver,confirmedReceiver,swapDay,swapSlotObj,commentVal);
 }
-function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime){
+function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime,comment){
   if(!window._fbReady)return;
   var db=window._db,fdoc=window._fbDoc,fset=window._fbSet;
   var key='swap_'+wi+'_'+di+'_'+si;
   var orig=(swapHistory[key]&&swapHistory[key].originalAgents)?swapHistory[key].originalAgents:originalAgents;
-  swapHistory[key]={wi:wi,di:di,si:si,originalAgents:orig,currentAgents:agents,time:slotTime||''};
-  fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,time:slotTime||'',ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
+  swapHistory[key]={wi:wi,di:di,si:si,originalAgents:orig,currentAgents:agents,time:slotTime||'',comment:comment||''};
+  fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,time:slotTime||'',comment:comment||'',ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('btnCancel').addEventListener('click',closeModal);
@@ -1500,7 +1614,7 @@ document.getElementById('btnTakeBack').addEventListener('click',function(){
       fset(fdoc(db,'vagtplan','changes'),{[key]:null},{merge:true}).catch(function(e){console.error(e);});
     }
   } else {
-    fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time||hist.time||'');
+    fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time||hist.time||'',hist.comment||'');
   }
   render();
 });
@@ -1540,7 +1654,7 @@ document.getElementById('btnRegretConfirmGive').addEventListener('click',functio
   updateWeeksSlot(wi,di,si,newAgents);
   closeRegret();closeModal();
   toast('Vagt givet til '+regretGiveTarget+' ✓',false);
-  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time||hist.time||'');
+  fbSaveSwap(wi,di,si,newAgents,hist.originalAgents,regretData.time||hist.time||'',hist.comment||'');
   render();
 });
 document.getElementById('regretClose').addEventListener('click',closeRegret);
@@ -1596,7 +1710,7 @@ function applyAllChanges(data){
       var slot=day.slots[val.si];
       if(!slot||slot.isBreak)return;
       if(val.time&&slot.time&&val.time!==slot.time)return;
-      swapHistory[key]={wi:val.wi,di:val.di,si:val.si,originalAgents:val.originalAgents||val.agents,currentAgents:val.agents,time:val.time||slot.time||''};
+      swapHistory[key]={wi:val.wi,di:val.di,si:val.si,originalAgents:val.originalAgents||val.agents,currentAgents:val.agents,time:val.time||slot.time||'',comment:val.comment||''};
       var dedupedAgents=dedup(val.agents);
       applySwap(val.wi,{di:val.di,si:val.si},dedupedAgents);
       slot.agents=dedupedAgents;

@@ -1568,6 +1568,28 @@ function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime,comment){
   var orig=(swapHistory[key]&&swapHistory[key].originalAgents)?swapHistory[key].originalAgents:originalAgents;
   swapHistory[key]={wi:wi,di:di,si:si,originalAgents:orig,currentAgents:agents,time:slotTime||'',comment:comment||''};
   fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,time:slotTime||'',comment:comment||'',ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
+  // ── ARCHIVE: write a human-readable record to a separate collection ──
+  var week=WEEKS[wi];
+  var day=week?week.days[di]:null;
+  var gave=orig.filter(function(a){return agents.indexOf(a)===-1;});
+  var received=agents.filter(function(a){return orig.indexOf(a)===-1;});
+  if(gave.length&&received.length&&day){
+    var archiveKey='swap_'+wi+'_'+di+'_'+si;
+    var import_col=window._fbCol(db,'vagtplan_archive');
+    var archiveDoc=fdoc(import_col,archiveKey);
+    fset(archiveDoc,{
+      date: day.date,
+      dayName: day.name,
+      time: slotTime||'',
+      giver: gave[0],
+      receiver: received[0],
+      originalAgents: orig,
+      newAgents: agents,
+      comment: comment||'',
+      ts: Date.now(),
+      weekNumber: week.wn
+    }).catch(function(e){console.error('Archive write error:',e);});
+  }
 }
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('btnCancel').addEventListener('click',closeModal);

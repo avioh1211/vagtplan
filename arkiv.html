@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vagtplan Arkiv</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--cream:#FFF9F2;--lavender:#C8B4E8;--lav-dark:#9B7FCC;
+    --sky:#A8CCEA;--peach:#F5D5A8;--peach-dark:#D4A870;
+    --lime:#C8E8A0;--lime-dark:#85BB45;--today-glow:#7B4FD4;
+    --absent-red:#E05050;
+    --display:'Bebas Neue',Impact,'Arial Black',sans-serif;
+    --mono:'DM Mono','Courier New',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;background:var(--cream);font-family:var(--mono);overflow-x:hidden;}
+
+  /* ══ MASTHEAD ══ */
+  .masthead{
+    background:var(--lavender);
+    border-bottom:5px solid var(--ink);
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:stretch;
+  }
+  .mt{padding:1.6rem 2rem;}
+  .mt h1{font-family:var(--display);font-size:clamp(3rem,8vw,6rem);color:var(--ink);letter-spacing:0.03em;line-height:0.88;}
+  .mt h1 span{color:var(--lav-dark);}
+  .mt-sub{font-size:0.75rem;color:var(--ink);letter-spacing:0.14em;text-transform:uppercase;margin-top:0.65rem;opacity:0.6;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+  .mt-back{
+    background:var(--ink);
+    border-left:5px solid var(--ink);
+    padding:1.2rem 2rem;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    min-width:160px;
+  }
+  .mt-back a{
+    font-family:var(--display);font-size:1.4rem;letter-spacing:0.1em;
+    color:var(--lavender);text-decoration:none;
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .mt-back a:hover{color:white;}
+
+  /* ══ TOOLBAR ══ */
+  .toolbar{
+    background:var(--ink);
+    border-bottom:4px solid var(--ink);
+    padding:0.9rem 1.8rem;
+    display:flex;flex-wrap:wrap;align-items:center;gap:0.8rem;
+  }
+  .toolbar-label{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-right:0.2rem;}
+  .fbtn{
+    font-family:var(--display);font-size:1.2rem;letter-spacing:0.08em;
+    padding:0.28rem 1.1rem;border:2.5px solid rgba(255,255,255,0.25);
+    border-radius:40px;cursor:pointer;background:transparent;
+    color:rgba(255,255,255,0.6);transition:all 0.15s;
+  }
+  .fbtn:hover{border-color:white;color:white;}
+  .fbtn.active{background:white;color:var(--ink);border-color:white;}
+  .fbtn[data-agent="Avi"].active{background:var(--lime);color:var(--ink);border-color:var(--lime-dark);}
+  .fbtn[data-agent="Tarja"].active{background:var(--lavender);color:var(--ink);border-color:var(--lav-dark);}
+  .fbtn[data-agent="Mie"].active{background:var(--peach);color:var(--ink);border-color:var(--peach-dark);}
+  .toolbar-sep{width:1px;height:1.6rem;background:rgba(255,255,255,0.15);margin:0 0.2rem;}
+  .search-wrap{flex:1;min-width:180px;max-width:320px;position:relative;}
+  .search-input{
+    width:100%;font-family:var(--mono);font-size:0.75rem;letter-spacing:0.05em;
+    padding:0.4rem 0.9rem 0.4rem 2rem;
+    background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);
+    border-radius:40px;color:white;outline:none;transition:border-color 0.15s;
+  }
+  .search-input::placeholder{color:rgba(255,255,255,0.3);}
+  .search-input:focus{border-color:var(--lavender);}
+  .search-icon{position:absolute;left:0.65rem;top:50%;transform:translateY(-50%);font-size:0.75rem;opacity:0.4;}
+  .count-badge{
+    margin-left:auto;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;
+    color:rgba(255,255,255,0.35);white-space:nowrap;
+  }
+  .count-badge b{color:var(--lavender);}
+
+  /* ══ SORT BAR ══ */
+  .sort-bar{
+    background:var(--peach);
+    border-bottom:4px solid var(--ink);
+    display:grid;
+    grid-template-columns:2fr 1.4fr 1fr 1fr 2.5fr auto;
+    align-items:stretch;
+  }
+  .sort-btn{
+    font-family:var(--display);font-size:1rem;letter-spacing:0.1em;
+    padding:0.7rem 1rem;border:none;border-right:3px solid var(--ink);
+    background:transparent;cursor:pointer;color:var(--ink);
+    display:flex;align-items:center;gap:0.4rem;
+    transition:background 0.12s;text-align:left;
+    white-space:nowrap;overflow:hidden;
+  }
+  .sort-btn:last-child{border-right:none;}
+  .sort-btn:hover{background:rgba(0,0,0,0.05);}
+  .sort-btn.asc::after{content:' ↑';opacity:0.6;}
+  .sort-btn.desc::after{content:' ↓';opacity:0.6;}
+  .sort-btn.asc,.sort-btn.desc{background:rgba(0,0,0,0.07);}
+
+  /* ══ TABLE ══ */
+  .archive-table{width:100%;}
+  .archive-row{
+    display:grid;
+    grid-template-columns:2fr 1.4fr 1fr 1fr 2.5fr auto;
+    border-bottom:2.5px solid var(--ink);
+    transition:background 0.12s;
+    align-items:stretch;
+  }
+  .archive-row:last-child{border-bottom:4px solid var(--ink);}
+  .archive-row:hover{background:rgba(123,79,212,0.04);}
+  .archive-row.row-avi{border-left:4px solid var(--lime-dark);}
+  .archive-row.row-tarja{border-left:4px solid var(--lav-dark);}
+  .archive-row.row-mie{border-left:4px solid var(--peach-dark);}
+  .archive-row.row-multi{border-left:4px solid var(--sky);}
+
+  .cell{
+    padding:0.75rem 1rem;
+    border-right:2px solid rgba(26,26,26,0.12);
+    display:flex;flex-direction:column;justify-content:center;
+    min-width:0;
+  }
+  .cell:last-child{border-right:none;}
+
+  .cell-date .day-name{font-family:var(--display);font-size:1.2rem;letter-spacing:0.05em;color:var(--ink);line-height:1.1;}
+  .cell-date .day-date{font-size:0.6rem;letter-spacing:0.06em;color:var(--ink);opacity:0.45;margin-top:0.1rem;}
+  .cell-time{font-size:0.72rem;font-weight:700;letter-spacing:0.04em;color:var(--ink);}
+  .cell-week{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink);opacity:0.5;}
+
+  .agent-pill{
+    font-family:var(--display);font-size:1rem;letter-spacing:0.06em;
+    padding:0.08rem 0.5rem;border:2px solid currentColor;border-radius:3px;
+    display:inline-block;white-space:nowrap;
+  }
+  .agent-pill.Avi{color:#2A7A2A;background:rgba(100,200,80,0.15);}
+  .agent-pill.Tarja{color:#5533AA;background:rgba(150,100,220,0.15);}
+  .agent-pill.Mie{color:#BB2277;background:rgba(220,80,150,0.15);}
+
+  .swap-arrow{font-size:0.9rem;opacity:0.3;margin:0 0.25rem;}
+
+  .cell-comment{font-size:0.65rem;letter-spacing:0.03em;color:var(--ink);opacity:0.55;font-style:italic;line-height:1.4;}
+  .cell-comment.has-comment{opacity:1;color:var(--ink);}
+  .cell-comment.has-comment::before{content:'💬 ';}
+  .cell-comment.no-comment{opacity:0.2;}
+
+  .cell-ts{font-size:0.58rem;letter-spacing:0.04em;color:var(--ink);opacity:0.35;white-space:nowrap;}
+
+  /* ══ EMPTY / LOADING ══ */
+  .state-box{
+    padding:4rem 2rem;text-align:center;
+    border-bottom:4px solid var(--ink);
+  }
+  .state-icon{font-size:3rem;margin-bottom:1rem;}
+  .state-title{font-family:var(--display);font-size:2rem;letter-spacing:0.1em;color:var(--ink);opacity:0.35;}
+  .state-sub{font-size:0.65rem;letter-spacing:0.08em;color:var(--ink);opacity:0.3;margin-top:0.5rem;text-transform:uppercase;}
+
+  /* ══ SYNC DOT ══ */
+  .sync-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#aaa;transition:background 0.5s;}
+
+  /* ══ STATS BAR ══ */
+  .stats-bar{
+    background:var(--ink);color:white;
+    padding:0.75rem 1.8rem;
+    border-bottom:4px solid var(--ink);
+    display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;
+  }
+  .stat{display:flex;align-items:baseline;gap:0.5rem;}
+  .stat-val{font-family:var(--display);font-size:1.6rem;letter-spacing:0.05em;color:var(--lime);}
+  .stat-label{font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
+
+  /* ══ RESPONSIVE ══ */
+  @media(max-width:700px){
+    .sort-bar,.archive-row{grid-template-columns:1.5fr 1fr 1fr 1.5fr;}
+    .sort-btn:nth-child(5),.sort-btn:nth-child(6),.cell:nth-child(5),.cell:nth-child(6){display:none;}
+    .masthead{grid-template-columns:1fr;}
+    .mt-back{border-left:none;border-top:4px solid var(--ink);flex-direction:row;}
+  }
+  @media(max-width:480px){
+    .sort-bar,.archive-row{grid-template-columns:1.5fr 1fr 1.5fr;}
+    .sort-btn:nth-child(3),.sort-btn:nth-child(4),.cell:nth-child(3),.cell:nth-child(4){display:none;}
+  }
+</style>
+
+<script type="module">
+  import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import{getFirestore,collection,onSnapshot,doc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const firebaseConfig={
+    apiKey:"AIzaSyBbKPzPJK50t77_vGqcbAyUdwogBe2t4Bs",
+    authDomain:"vagtplan-fcaf8.firebaseapp.com",
+    projectId:"vagtplan-fcaf8",
+    storageBucket:"vagtplan-fcaf8.firebasestorage.app",
+    messagingSenderId:"1094720834219",
+    appId:"1:1094720834219:web:3e858649614a5393dac5ee"
+  };
+  const app=initializeApp(firebaseConfig);
+  const db=getFirestore(app);
+  window._db=db;
+  window._fbCol=collection;
+  window._fbSnap=onSnapshot;
+  window._fbDoc=doc;
+  window._fbReady=true;
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mt">
+    <h1>ARKIV<span></span></h1>
+    <div class="mt-sub">
+      Vagtbytte historik · 2026
+      <span style="display:inline-flex;align-items:center;gap:0.4rem;margin-left:0.5rem;">
+        <span class="sync-dot" id="syncDot"></span>
+        <span style="font-size:0.55rem;letter-spacing:0.1em;">LIVE SYNC</span>
+      </span>
+    </div>
+  </div>
+  <div class="mt-back">
+    <a href="vagtplan_with_comments.html">← VAGTPLAN</a>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><span class="stat-val" id="statTotal">—</span><span class="stat-label">Bytter i alt</span></div>
+  <div class="stat"><span class="stat-val" id="statAvi" style="color:#C8E8A0;">—</span><span class="stat-label">Avi involveret</span></div>
+  <div class="stat"><span class="stat-val" id="statTarja" style="color:#C8B4E8;">—</span><span class="stat-label">Tarja involveret</span></div>
+  <div class="stat"><span class="stat-val" id="statMie" style="color:#F5D5A8;">—</span><span class="stat-label">Mie involveret</span></div>
+  <div class="stat"><span class="stat-val" id="statComments" style="color:#A8CCEA;">—</span><span class="stat-label">Med kommentar</span></div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">FILTER</span>
+  <button class="fbtn active" data-agent="">ALLE</button>
+  <button class="fbtn" data-agent="Avi">AVI</button>
+  <button class="fbtn" data-agent="Tarja">TARJA</button>
+  <button class="fbtn" data-agent="Mie">MIE</button>
+  <div class="toolbar-sep"></div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="Søg dato, navn, kommentar…">
+  </div>
+  <span class="count-badge" id="countBadge">Indlæser…</span>
+</div>
+
+<!-- SORT BAR -->
+<div class="sort-bar">
+  <button class="sort-btn desc" data-col="date" id="sortDate">DATO</button>
+  <button class="sort-btn" data-col="time" id="sortTime">TIDSPUNKT</button>
+  <button class="sort-btn" data-col="giver" id="sortGiver">GIVER</button>
+  <button class="sort-btn" data-col="receiver" id="sortReceiver">MODTAGER</button>
+  <button class="sort-btn" data-col="comment" id="sortComment">KOMMENTAR</button>
+  <button class="sort-btn" data-col="ts" id="sortTs">REGISTRERET</button>
+</div>
+
+<!-- TABLE -->
+<div class="archive-table" id="archiveTable">
+  <div class="state-box" id="loadingState">
+    <div class="state-icon">⏳</div>
+    <div class="state-title">INDLÆSER</div>
+    <div class="state-sub">Henter data fra Firebase…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var allRecords=[];
+  var activeFilter='';
+  var searchQuery='';
+  var sortCol='date';
+  var sortDir='desc'; // newest first by default
+
+  /* ── Parse DD/MM date for sorting ── */
+  function parseDateVal(dateStr){
+    if(!dateStr)return 0;
+    var p=dateStr.split('/');
+    if(p.length<2)return 0;
+    return parseInt(p[1])*100+parseInt(p[0]);
+  }
+
+  /* ── Parse time HH:MM-HH:MM for sorting ── */
+  function parseTimeVal(timeStr){
+    if(!timeStr)return 0;
+    return parseInt((timeStr.split('-')[0]||'0').replace(':',''));
+  }
+
+  /* ── Format timestamp ── */
+  function fmtTs(ts){
+    if(!ts)return '—';
+    var d=new Date(ts);
+    return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()+
+      ' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+
+  /* ── Determine row colour class from giver+receiver ── */
+  function rowClass(rec){
+    var agents=[rec.giver,rec.receiver].filter(Boolean);
+    var unique=[...new Set(agents)];
+    if(unique.length===1)return 'row-'+unique[0].toLowerCase();
+    return 'row-multi';
+  }
+
+  /* ── Update stats bar ── */
+  function updateStats(){
+    var total=allRecords.length;
+    document.getElementById('statTotal').textContent=total;
+    document.getElementById('statAvi').textContent=allRecords.filter(function(r){return r.giver==='Avi'||r.receiver==='Avi';}).length;
+    document.getElementById('statTarja').textContent=allRecords.filter(function(r){return r.giver==='Tarja'||r.receiver==='Tarja';}).length;
+    document.getElementById('statMie').textContent=allRecords.filter(function(r){return r.giver==='Mie'||r.receiver==='Mie';}).length;
+    document.getElementById('statComments').textContent=allRecords.filter(function(r){return r.comment&&r.comment.trim();}).length;
+  }
+
+  /* ── Filter + sort + render ── */
+  function renderTable(){
+    var filtered=allRecords.filter(function(r){
+      if(activeFilter&&r.giver!==activeFilter&&r.receiver!==activeFilter)return false;
+      if(searchQuery){
+        var q=searchQuery.toLowerCase();
+        var haystack=[r.date,r.dayName,r.time,r.giver,r.receiver,r.comment,'uge '+r.weekNumber].join(' ').toLowerCase();
+        if(haystack.indexOf(q)===-1)return false;
+      }
+      return true;
+    });
+
+    // Sort
+    filtered.sort(function(a,b){
+      var av,bv;
+      if(sortCol==='date'){av=parseDateVal(a.date);bv=parseDateVal(b.date);}
+      else if(sortCol==='time'){av=parseTimeVal(a.time);bv=parseTimeVal(b.time);}
+      else if(sortCol==='giver'){av=(a.giver||'').toLowerCase();bv=(b.giver||'').toLowerCase();}
+      else if(sortCol==='receiver'){av=(a.receiver||'').toLowerCase();bv=(b.receiver||'').toLowerCase();}
+      else if(sortCol==='comment'){av=(a.comment||'').toLowerCase();bv=(b.comment||'').toLowerCase();}
+      else if(sortCol==='ts'){av=a.ts||0;bv=b.ts||0;}
+      else{av=a.ts||0;bv=b.ts||0;}
+      if(av<bv)return sortDir==='asc'?-1:1;
+      if(av>bv)return sortDir==='asc'?1:-1;
+      // secondary sort by ts descending
+      return (b.ts||0)-(a.ts||0);
+    });
+
+    var badge=document.getElementById('countBadge');
+    badge.innerHTML='<b>'+filtered.length+'</b> / '+allRecords.length+' poster';
+
+    var table=document.getElementById('archiveTable');
+    if(filtered.length===0){
+      table.innerHTML='<div class="state-box"><div class="state-icon">🔎</div><div class="state-title">INGEN RESULTATER</div><div class="state-sub">Prøv et andet filter eller søgeord</div></div>';
+      return;
+    }
+
+    var html='';
+    filtered.forEach(function(r){
+      var rc=rowClass(r);
+      var hasComment=r.comment&&r.comment.trim();
+      var commentClass=hasComment?'cell-comment has-comment':'cell-comment no-comment';
+      var commentText=hasComment?escHtml(r.comment):'ingen kommentar';
+      html+='<div class="archive-row '+rc+'">';
+      // DATE
+      html+='<div class="cell cell-date">';
+      html+='<div class="day-name">'+escHtml(r.dayName||'')+'</div>';
+      html+='<div class="day-date">'+escHtml(r.date||'')+(r.weekNumber?' &nbsp;·&nbsp; Uge '+r.weekNumber:'')+'</div>';
+      html+='</div>';
+      // TIME
+      html+='<div class="cell"><span class="cell-time">'+escHtml(r.time||'—')+'</span></div>';
+      // GIVER
+      html+='<div class="cell"><span class="agent-pill '+(r.giver||'')+'">'+escHtml(r.giver||'—')+'</span></div>';
+      // RECEIVER
+      html+='<div class="cell"><span class="agent-pill '+(r.receiver||'')+'">'+escHtml(r.receiver||'—')+'</span></div>';
+      // COMMENT
+      html+='<div class="cell"><span class="'+commentClass+'">'+commentText+'</span></div>';
+      // TIMESTAMP
+      html+='<div class="cell"><span class="cell-ts">'+fmtTs(r.ts)+'</span></div>';
+      html+='</div>';
+    });
+    table.innerHTML=html;
+  }
+
+  function escHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Firebase listener ── */
+  function startSync(){
+    if(!window._fbReady){window.addEventListener('firebaseReady',startSync,{once:true});return;}
+    var db=window._db;
+    var col=window._fbCol(db,'vagtplan_archive');
+    window._fbSnap(col,function(snapshot){
+      allRecords=[];
+      snapshot.forEach(function(docSnap){
+        var d=docSnap.data();
+        allRecords.push({
+          id:docSnap.id,
+          date:d.date||'',
+          dayName:d.dayName||'',
+          time:d.time||'',
+          giver:d.giver||'',
+          receiver:d.receiver||'',
+          comment:d.comment||'',
+          ts:d.ts||0,
+          weekNumber:d.weekNumber||'',
+          originalAgents:d.originalAgents||[],
+          newAgents:d.newAgents||[]
+        });
+      });
+      document.getElementById('syncDot').style.background='#4CAF50';
+      document.getElementById('syncDot').title='Forbundet';
+      updateStats();
+      renderTable();
+    },function(err){
+      console.error('Archive sync error',err);
+      document.getElementById('syncDot').style.background='#E05050';
+      document.getElementById('archiveTable').innerHTML='<div class="state-box"><div class="state-icon">⚠️</div><div class="state-title">FORBINDELSESFEJL</div><div class="state-sub">Tjek Firebase-indstillinger</div></div>';
+    });
+  }
+
+  /* ── Filter buttons ── */
+  document.querySelectorAll('.fbtn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      activeFilter=btn.getAttribute('data-agent');
+      document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      renderTable();
+    });
+  });
+
+  /* ── Search ── */
+  document.getElementById('searchInput').addEventListener('input',function(){
+    searchQuery=this.value.trim();
+    renderTable();
+  });
+
+  /* ── Sort buttons ── */
+  document.querySelectorAll('.sort-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var col=btn.getAttribute('data-col');
+      if(sortCol===col){
+        sortDir=sortDir==='asc'?'desc':'asc';
+      } else {
+        sortCol=col;
+        sortDir=col==='date'||col==='ts'?'desc':'asc';
+      }
+      document.querySelectorAll('.sort-btn').forEach(function(b){b.classList.remove('asc','desc');});
+      btn.classList.add(sortDir);
+      renderTable();
+    });
+  });
+
+  // Mark the default active sort button
+  document.getElementById('sortDate').classList.add('desc');
+
+  startSync();
+})();
+</script>
+</body>
+</html>

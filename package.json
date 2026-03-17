@@ -1,8 +1,0 @@
-{
-  "name": "vagtplan-api",
-  "version": "1.0.0",
-  "description": "Vagtplan email API",
-  "dependencies": {
-    "resend": "^3.2.0"
-  }
-}

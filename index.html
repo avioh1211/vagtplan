@@ -1,4 +1,19 @@
-<!DOCTYPE html>
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<style>
+								body {
+									background-color: white; /* Ensure the iframe has a white background */
+								}
+
+								
+							</style>
+                        </head>
+                        <body>
+                            <!DOCTYPE html>
 <html lang="da">
 <head>
 <meta charset="UTF-8">
@@ -20,7 +35,6 @@
   *{margin:0;padding:0;box-sizing:border-box;}
   html{font-size:var(--base);}
   html,body{width:100%;background:var(--cream);font-family:var(--mono);overflow-x:hidden;}
-
   /* ══ MASTHEAD ══ */
   .masthead{
     background:var(--lavender);
@@ -69,7 +83,6 @@
   .mt-today .today-label{font-size:0.65rem;font-weight:700;letter-spacing:0.2em;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:0.3rem;position:relative;}
   .mt-today .tday{font-family:var(--display);font-size:2.8rem;letter-spacing:0.05em;color:white;position:relative;line-height:1;}
   .mt-today .tdate{font-size:0.8rem;font-weight:700;letter-spacing:0.1em;color:white;margin-top:0.3rem;opacity:0.85;position:relative;}
-
   /* ══ CONTROLS ══ */
   .controls{
     background:var(--cream);
@@ -98,7 +111,6 @@
   .abtn[data-agent="Avi"].active{background:var(--lime);color:var(--ink);border-color:var(--lime-dark);}
   .abtn[data-agent="Tarja"].active{background:var(--lavender);color:var(--ink);border-color:var(--lav-dark);}
   .abtn[data-agent="Mie"].active{background:var(--peach);color:var(--ink);border-color:var(--peach-dark);}
-
   /* ══ IAM BAR ══ */
   .iam-bar{
     background:#1a1a1a;
@@ -142,11 +154,9 @@
   .absent-btn:hover{border-color:var(--absent-red);color:var(--absent-red);}
   .absent-btn.active{background:var(--absent-red);color:white;border-color:var(--absent-red);}
   .iam-hint{font-size:0.58rem;letter-spacing:0.1em;color:rgba(255,255,255,0.3);margin-left:auto;font-style:italic;}
-
   /* ══ MY CHANGES PANEL ══ */
   .my-changes-panel{display:none;background:#111;border-bottom:4px solid var(--ink);}
   .my-changes-panel.has-changes{display:block;}
-
   .mc-header{
     display:flex;
     align-items:center;
@@ -158,7 +168,6 @@
   }
   .mc-header:hover .mc-header-inner{opacity:1;}
   .mc-header-inner{display:flex;align-items:center;gap:1rem;flex:1;opacity:0.9;transition:opacity 0.12s;}
-
   .mc-title{
     font-family:var(--display);
     font-size:1.6rem;
@@ -195,7 +204,6 @@
     color:rgba(255,255,255,0.3);
     font-style:italic;
   }
-
   .mc-body{display:none;padding:0 1.8rem 1.4rem;border-top:1px solid rgba(255,255,255,0.08);}
   .mc-body.open{display:block;animation:fadeIn 0.18s ease;}
   .mc-empty{
@@ -231,7 +239,6 @@
     flex-wrap:wrap;
   }
   .mc-item:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.18);}
-
   .mc-item-day{min-width:5.5rem;flex-shrink:0;}
   .mc-item-dayname{
     font-family:var(--display);
@@ -309,7 +316,6 @@
     flex-shrink:0;
   }
   .mc-regret-btn:hover{background:var(--absent-red);color:white;border-color:var(--absent-red);}
-
   /* ══ HOURS BAR ══ */
   .hours-bar{
     background:var(--ink);
@@ -325,7 +331,6 @@
   .hours-bar span{opacity:0.8;display:flex;align-items:center;gap:8px;}
   .hours-bar b{color:var(--lime);font-size:1.8rem;opacity:1;}
   .hours-bar .absent-note{font-size:0.6rem;color:var(--absent-red);letter-spacing:0.08em;opacity:1;}
-
   /* ══ WEEK NAV ══ */
   .week-nav{
     background:var(--peach);
@@ -383,12 +388,10 @@
     color:var(--ink);
     opacity:0.55;
   }
-
   /* ══ SCHEDULE / DAY GRID ══ */
   .schedule{display:none;animation:fadeIn 0.2s ease;}
   .schedule.visible{display:block;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-
   .day-grid{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -418,7 +421,6 @@
   .absent-who{font-size:0.6rem;font-weight:700;letter-spacing:0.12em;color:var(--absent-red);opacity:0.7;text-transform:uppercase;}
   .absent-undo{margin-top:0.5rem;font-size:0.55rem;font-weight:700;letter-spacing:0.1em;color:var(--absent-red);text-transform:uppercase;cursor:pointer;border:1.5px solid var(--absent-red);border-radius:20px;padding:0.18rem 0.75rem;background:white;transition:all 0.15s;}
   .absent-undo:hover{background:var(--absent-red);color:white;}
-
   .absent-notice{display:none;align-items:center;gap:0.5rem;padding:0.6rem 0.9rem;background:var(--absent-bg);border-bottom:3px solid var(--absent-red);flex-shrink:0;}
   .day-col.absent-other .absent-notice{display:flex;}
   .absent-notice-icon{font-size:1.1rem;flex-shrink:0;}
@@ -428,7 +430,6 @@
   .agent-tag.blanked-absent{color:transparent!important;background:rgba(224,80,80,0.12)!important;border-color:rgba(224,80,80,0.3)!important;border-style:dashed!important;position:relative;min-width:2.5rem;}
   .agent-tag.blanked-absent::after{content:'–';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:rgba(224,80,80,0.45);font-size:0.9em;font-family:var(--mono);}
   .day-col.absent-other .day-header{border-bottom-color:var(--absent-red)!important;}
-
   /* absent-mode interactions */
   .absent-mode .day-col:not(.holiday):not(.absent-day){cursor:pointer;}
   .absent-mode .day-col:not(.holiday):not(.absent-day):hover{outline:3px dashed var(--absent-red);outline-offset:-3px;background:rgba(224,80,80,0.04);}
@@ -438,7 +439,6 @@
   .absent-mode .absent-mode-btn{display:inline-block;}
   .day-col.absent-day .absent-mode-btn{display:none!important;}
   .absent-mode-btn:hover{background:var(--absent-red);color:white;border-color:var(--absent-red);}
-
   /* ══ DAY HEADER ══ */
   .day-header{
     background:var(--sky);
@@ -472,7 +472,6 @@
   .holiday-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.2rem 0.5rem;gap:0.5rem;background:var(--holbg);}
   .holiday-off{font-family:var(--display);font-size:1.2rem;letter-spacing:0.1em;color:var(--lav-dark);}
   .holiday-sub{font-size:0.52rem;color:var(--ink);letter-spacing:0.08em;text-align:center;opacity:0.55;text-transform:uppercase;}
-
   /* ══ SLOTS ══ */
   .slot{
     padding:0.65rem 0.9rem;
@@ -485,7 +484,6 @@
   .slot:last-child{border-bottom:none;}
   .day-col.today .slot{background:rgba(250,245,255,0.8);}
   .day-col.today .slot.break-slot{border-left:4px solid var(--today-glow);padding-left:0.55rem;}
-
   .slot-time{
     font-size:0.78rem;
     font-weight:700;
@@ -496,7 +494,6 @@
     text-transform:uppercase;
   }
   .day-col.today .slot-time{opacity:0.85;color:var(--today-glow);}
-
   .slot-agents{display:flex;flex-wrap:wrap;gap:0.3rem;}
   .agent-tag{
     font-family:var(--display);
@@ -512,11 +509,9 @@
   .agent-tag.Avi{color:#2A7A2A;background:rgba(100,200,80,0.15);}
   .agent-tag.Tarja{color:#5533AA;background:rgba(150,100,220,0.15);}
   .agent-tag.Mie{color:#BB2277;background:rgba(220,80,150,0.15);}
-
   .slot.break-slot{background-color:#EDE8F8;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(0,0,0,0.05) 4px,rgba(0,0,0,0.05) 8px);}
   .slot.break-slot .slot-time{opacity:0.35;}
   .break-label{font-size:0.58rem;font-weight:700;letter-spacing:0.07em;color:var(--ink);opacity:0.45;text-transform:uppercase;}
-
   .slot.highlighted{background-color:var(--hl-bg,#C8E8A0)!important;background-image:none!important;}
   .slot.dimmed .agent-tag{opacity:0.1;}
   .slot.dimmed .agent-tag.hl-agent{opacity:1;}
@@ -527,7 +522,6 @@
   .regret-changed .slot-time{color:var(--absent-red)!important;opacity:1!important;}
   .regret-changed::after{content:'↩ FORTRYD';position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);font-size:0.48rem;font-family:var(--mono);font-weight:700;letter-spacing:0.1em;color:var(--absent-red);opacity:0.85;pointer-events:none;}
   .regret-changed:hover{background:rgba(224,80,80,0.09)!important;}
-
   /* ══ SWAP COMMENT ══ */
   .swap-comment-wrap{margin-top:1.1rem;}
   .swap-comment-label{
@@ -579,7 +573,6 @@
   }
   .swap-comment-char.near-limit{color:#D4A870;opacity:0.85;}
   .swap-comment-char.at-limit{color:var(--absent-red);opacity:1;}
-
   /* ══ MODALS ══ */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,0.72);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;animation:modalIn 0.2s ease;}
@@ -615,12 +608,10 @@
   .btn-regret-opt#btnTakeBack:hover{background:var(--absent-red);color:white;}
   .btn-regret-opt.btn-regret-give{border-color:var(--today-glow);color:var(--today-glow);}
   .btn-regret-opt.btn-regret-give:hover{background:var(--today-glow);color:white;}
-
   /* ══ TOAST ══ */
   .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(4rem);background:#1a1a1a;color:white;padding:0.85rem 1.8rem;border-radius:40px;font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;z-index:200;transition:transform 0.3s ease,opacity 0.3s ease;opacity:0;pointer-events:none;white-space:nowrap;}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
   .toast.red{background:var(--absent-red);}
-
   /* ══ LEGEND ══ */
   .legend{
     background:var(--sky);
@@ -634,7 +625,6 @@
   .legend-item{font-size:0.6rem;letter-spacing:0.09em;color:var(--ink);text-transform:uppercase;opacity:0.7;}
   .legend-item strong{opacity:1;}
   .legend-item.rule-mie{color:#BB2277;opacity:1;}
-
   /* ══ PIN MODAL ══ */
   .pin-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,0.82);backdrop-filter:blur(6px);z-index:300;align-items:center;justify-content:center;}
   .pin-overlay.open{display:flex;animation:modalIn 0.2s ease;}
@@ -668,7 +658,6 @@
   .iam-change-pin{font-family:var(--display);font-size:0.95rem;letter-spacing:0.08em;padding:0.25rem 0.9rem;border:2px solid rgba(255,255,255,0.25);border-radius:40px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);transition:all 0.15s;display:none;}
   .iam-change-pin.visible{display:inline-block;}
   .iam-change-pin:hover{border-color:rgba(255,255,255,0.7);color:rgba(255,255,255,0.9);}
-
   /* ══ RESPONSIVE ══ */
   @media(max-width:860px){
     .day-grid{grid-template-columns:repeat(3,1fr);}
@@ -726,7 +715,6 @@
   <button class="iam-change-pin" id="changePinBtn">🔑 SKIFT PIN</button>
   <span class="iam-hint" id="iamHint">Vælg din rolle for at bytte vagter eller melde fra</span>
 </div>
-
 <!-- ── PIN MODAL ── -->
 <div class="pin-overlay" id="pinOverlay">
   <div class="pin-modal">
@@ -765,7 +753,6 @@
     </div>
   </div>
 </div>
-
 <!-- ── MY CHANGES PANEL ── -->
 <div class="my-changes-panel" id="myChangesPanel">
   <div class="mc-header" id="mcHeader">
@@ -778,7 +765,6 @@
   </div>
   <div class="mc-body" id="mcBody"></div>
 </div>
-
 <div class="week-nav">
   <button class="wnav-arrow" id="wnavPrev">&#8592;</button>
   <div class="wnav-center">
@@ -806,7 +792,6 @@
   <div class="legend-item"><strong>Rød:</strong> Fraværsdag &nbsp;|&nbsp; <strong>Stiplet rød:</strong> Klik slot for at fortryde bytte</div>
   <a href="arkiv.html" class="legend-item" style="margin-left:auto;color:var(--today-glow);text-decoration:none;opacity:1;font-weight:700;letter-spacing:0.09em;border:2px solid var(--today-glow);border-radius:20px;padding:0.15rem 0.9rem;transition:all 0.15s;" onmouseover="this.style.background='var(--today-glow)';this.style.color='white';" onmouseout="this.style.background='transparent';this.style.color='var(--today-glow)';">📋 SE ARKIV →</a>
 </div>
-
 <!-- ── SWAP MODAL ── -->
 <div class="modal-overlay" id="swapModal">
   <div class="modal">
@@ -822,22 +807,14 @@
       </div>
       <div class="modal-step">VÆLG HVEM DU VIL BYTTE MED</div>
       <div class="swap-options" id="swapOptions"></div>
-
-      <!-- ── COMMENT FIELD ── -->
       <div class="swap-comment-wrap">
         <label class="swap-comment-label" for="swapComment">KOMMENTAR (valgfrit)</label>
-        <textarea
-          class="swap-comment-input"
-          id="swapComment"
-          maxlength="280"
-          placeholder="F.eks. lægeaftale, ferie, privat ærinde…"
-        ></textarea>
+        <textarea class="swap-comment-input" id="swapComment" maxlength="280" placeholder="F.eks. lægeaftale, ferie, privat ærinde…"></textarea>
         <div class="swap-comment-footer">
           <span class="swap-comment-hint">Vises i mail til begge parter og i Teams-kanalen</span>
           <span class="swap-comment-char" id="swapCommentChar">0 / 280</span>
         </div>
       </div>
-
       <div class="modal-actions">
         <button class="btn-cancel" id="btnCancel">ANNULLER</button>
         <button class="btn-accept" id="btnAccept">ACCEPTER BYTTE ✓</button>
@@ -845,7 +822,6 @@
     </div>
   </div>
 </div>
-
 <!-- ── REGRET MODAL ── -->
 <div class="modal-overlay" id="regretModal">
   <div class="modal">
@@ -895,11 +871,7 @@ var swapSlotEl=null,swapSlotData=null,swapTarget='',swapHistory={};
 var regretData=null,regretGiveTarget='';
 var mcOpen=false;
 function dedup(arr){var seen={};return arr.filter(function(a){if(seen[a])return false;seen[a]=true;return true;});}
-
-/* ── AGENT EMAILS ── */
 var AGENT_EMAILS={Avi:'aoh@lruddannelse.dk',Tarja:'tak@lruddannelse.dk',Mie:'mie.aagaard@lruddannelse.dk'};
-
-/* ── ICS GENERATOR ── */
 function parseDateForICS(dateStr,timeStr){
   var dp=dateStr.split('/');
   var day=parseInt(dp[0]),month=parseInt(dp[1])-1,year=2026;
@@ -934,13 +906,9 @@ function downloadICS(dateStr,timeStr,giver,receiver){
   document.body.appendChild(a);a.click();
   document.body.removeChild(a);URL.revokeObjectURL(url);
 }
-
-/* ── SEND SWAP EMAILS VIA EMAILJS ── */
 var EMAILJS_SERVICE='service_3bmk898';
 var EMAILJS_PERSONAL_TEMPLATE='template_m97vqah';
 var EMAILJS_TEAMS_TEMPLATE='template_k6zw4nc';
-
-// comment param is optional — included in all 3 sends (giver, receiver, Teams channel)
 function sendSwapEmails(giver,receiver,day,slot,comment){
   var dateFormatted=day.name+' d. '+day.date+' 2026';
   var savedGiver=giver;
@@ -953,7 +921,6 @@ function sendSwapEmails(giver,receiver,day,slot,comment){
     console.error('Manglende emails:',savedGiver,giverEmail,savedReceiver,receiverEmail);
     return;
   }
-  // 1. Email to giver
   emailjs.send(EMAILJS_SERVICE, EMAILJS_PERSONAL_TEMPLATE, {
     to_name: savedGiver,
     to_email: giverEmail,
@@ -963,7 +930,6 @@ function sendSwapEmails(giver,receiver,day,slot,comment){
     comment: savedComment
   }).then(function(){
     console.log('Mail sendt til '+savedGiver);
-    // 2. Email to receiver
     return emailjs.send(EMAILJS_SERVICE, EMAILJS_PERSONAL_TEMPLATE, {
       to_name: savedReceiver,
       to_email: receiverEmail,
@@ -974,7 +940,6 @@ function sendSwapEmails(giver,receiver,day,slot,comment){
     });
   }).then(function(){
     console.log('Mail sendt til '+savedReceiver);
-    // 3. Teams channel notification
     return emailjs.send(EMAILJS_SERVICE, EMAILJS_TEAMS_TEMPLATE, {
       giver: savedGiver,
       receiver: savedReceiver,
@@ -990,7 +955,6 @@ function sendSwapEmails(giver,receiver,day,slot,comment){
     toast('Fejl ved afsendelse: '+e.message,true);
   });
 }
-
 function renderMyChanges(){
   var panel=document.getElementById('myChangesPanel');
   var body=document.getElementById('mcBody');
@@ -1076,7 +1040,6 @@ function renderMyChanges(){
         })(item);
       }
       row.appendChild(dayCol);row.appendChild(te);row.appendChild(sep);row.appendChild(de);row.appendChild(tb);row.appendChild(rb);
-      // Show comment if present
       if(item.comment){
         var commentEl=document.createElement('div');
         commentEl.className='mc-item-comment';
@@ -1094,15 +1057,12 @@ document.getElementById('mcHeader').addEventListener('click',function(){
   document.getElementById('mcBody').classList.toggle('open',mcOpen);
   document.getElementById('mcToggle').classList.toggle('open',mcOpen);
 });
-
-// ── COMMENT CHAR COUNTER ──
 document.getElementById('swapComment').addEventListener('input',function(){
   var len=this.value.length;
   var charEl=document.getElementById('swapCommentChar');
   charEl.textContent=len+' / 280';
   charEl.className='swap-comment-char'+(len>=260?' near-limit':'')+(len>=280?' at-limit':'');
 });
-
 function buildUI(){
   var schEl=document.getElementById('schedules');
   WEEKS.forEach(function(week){
@@ -1171,7 +1131,8 @@ function buildUI(){
             div.appendChild(tEl);div.appendChild(aEl);
             div.addEventListener('click',function(){
               if(!activeIam||absentMode)return;
-              if(absentDays[week.wi+'-'+di])return;
+              // ✅ FIX: Only block if the logged-in user themselves is the absent agent
+              if(absentDays[week.wi+'-'+di]===activeIam)return;
               var ags=(this.dataset.agents||'').split(',').filter(Boolean);
               var slotKey='swap_'+week.wi+'_'+di+'_'+si;
               var hist=swapHistory[slotKey];
@@ -1330,13 +1291,10 @@ document.querySelectorAll('.abtn').forEach(function(btn){
     render();
   });
 });
-
-/* ── PIN AUTH ── */
 var pinState='';
 var pinAgent='';
 var pinBuffer='';
 var pinNewBuffer='';
-
 async function sha256(str){
   var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
@@ -1354,7 +1312,6 @@ async function savePin(agent,hash,isTemp){
   var val={hash:hash,temp:isTemp?true:false};
   await window._fbSet(window._fbDoc(window._db,'vagtplan','pins'),{[agent]:val},{merge:true});
 }
-
 function openPinModal(agent,state){
   pinAgent=agent;pinState=state;pinBuffer='';pinNewBuffer='';
   var hdr=document.getElementById('pinHeader');
@@ -1399,7 +1356,6 @@ async function handlePinComplete(){
   var entered=pinBuffer;
   pinBuffer='';
   updatePinDots();
-
   if(pinState==='login'){
     var stored=await getStoredPin(pinAgent);
     if(!stored){pinShakeError('Ingen PIN sat — kontakt admin');return;}
@@ -1417,7 +1373,6 @@ async function handlePinComplete(){
       closePinModal();
       activateIam(loginAgent);
     }
-
   } else if(pinState==='set-new'||pinState==='change-new'){
     pinNewBuffer=entered;
     pinState=(pinState==='set-new')?'set-confirm':'change-confirm';
@@ -1425,7 +1380,6 @@ async function handlePinComplete(){
     document.getElementById('pinInfo').textContent='Gentag din nye PIN-kode for at bekræfte:';
     document.getElementById('pinError').textContent='';
     updatePinDots();
-
   } else if(pinState==='set-confirm'||pinState==='change-confirm'){
     if(entered!==pinNewBuffer){
       pinShakeError('PIN-koderne er ikke ens — prøv igen');
@@ -1442,7 +1396,6 @@ async function handlePinComplete(){
     closePinModal();
     toast('PIN opdateret for '+savedAgent+' ✓',false);
     if(savedState!=='change-confirm')activateIam(savedAgent);
-
   } else if(pinState==='change-old'){
     var stored2=await getStoredPin(pinAgent);
     if(!stored2){pinShakeError('Ingen PIN fundet');return;}
@@ -1455,7 +1408,6 @@ async function handlePinComplete(){
     updatePinDots();
   }
 }
-
 function activateIam(val){
   activeIam=val;absentMode=false;
   document.querySelectorAll('.iam-btn').forEach(function(b){b.classList.remove('active');});
@@ -1480,7 +1432,6 @@ function deactivateIam(){
   refreshAbsentView();
   render();
 }
-
 document.querySelectorAll('.pin-key').forEach(function(key){
   key.addEventListener('click',function(){
     var k=key.getAttribute('data-k');
@@ -1498,7 +1449,6 @@ document.getElementById('changePinBtn').addEventListener('click',function(){
   if(!activeIam)return;
   openPinModal(activeIam,'change-old');
 });
-
 document.querySelectorAll('.iam-btn').forEach(function(btn){
   btn.addEventListener('click',function(){
     var val=btn.getAttribute('data-iam');
@@ -1511,7 +1461,6 @@ function openSwap(slotEl,data){
   swapSlotEl=slotEl;swapSlotData=data;swapTarget='';
   document.getElementById('swapSlotTime').textContent=data.time;
   document.getElementById('swapSlotDay').textContent='Din vagt · '+data.dayName;
-  // Reset comment field
   var commentEl=document.getElementById('swapComment');
   if(commentEl){commentEl.value='';document.getElementById('swapCommentChar').textContent='0 / 280';document.getElementById('swapCommentChar').className='swap-comment-char';}
   var opts=document.getElementById('swapOptions');opts.innerHTML='';
@@ -1542,10 +1491,8 @@ function acceptSwap(){
   if(!swapTarget||!swapSlotEl||!swapSlotData)return;
   var ags=(swapSlotEl.dataset.agents||'').split(',').filter(Boolean);
   var idx=ags.indexOf(activeIam);
-  // Save all needed values BEFORE closeModal() clears them
   var confirmedGiver=activeIam;
   var confirmedReceiver=swapTarget;
-  // Capture comment before modal closes
   var commentVal=(document.getElementById('swapComment').value||'').trim();
   if(idx>-1)ags[idx]=confirmedReceiver;
   ags=dedup(ags);
@@ -1569,7 +1516,6 @@ function fbSaveSwap(wi,di,si,agents,originalAgents,slotTime,comment){
   var orig=(swapHistory[key]&&swapHistory[key].originalAgents)?swapHistory[key].originalAgents:originalAgents;
   swapHistory[key]={wi:wi,di:di,si:si,originalAgents:orig,currentAgents:agents,time:slotTime||'',comment:comment||''};
   fset(fdoc(db,'vagtplan','changes'),{[key]:{wi:wi,di:di,si:si,agents:agents,originalAgents:orig,time:slotTime||'',comment:comment||'',ts:Date.now()}},{merge:true}).catch(function(e){console.error(e);});
-  // ── ARCHIVE: write a human-readable record to a separate collection ──
   var week=WEEKS[wi];
   var day=week?week.days[di]:null;
   var gave=orig.filter(function(a){return agents.indexOf(a)===-1;});
@@ -1784,3 +1730,24 @@ if(document.readyState==='loading'){
 </script>
 </body>
 </html>
+
+							<script>
+                            	&gt; if(absentDays[week.wi+&#x27;-&#x27;+di])return;
+&gt; 
+&gt; if(absentDays[week.wi+&#x27;-&#x27;+di]===activeIam)return;
+&gt; 
+> // BEFORE (buggy):
+> if(absentDays[week.wi+'-'+di])return;
+>
+> // AFTER (fixed):
+> if(absentDays[week.wi+'-'+di]===activeIam)return;
+> 
+// Before:
+if(absentDays[week.wi+'-'+di])return;
+
+// After (✅ fixed):
+if(absentDays[week.wi+'-'+di]===activeIam)return;
+							</script>
+                        </body>
+                        </html>
+                    

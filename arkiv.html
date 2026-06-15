@@ -1,20 +1,4 @@
-Ja, lige præcis! I den HTML-kode, du lige har sendt med, **er dine ugedata og generatoren skam inkluderet**.
 
-Du har det fulde `WEEKS = [...]` array stående som en lang datalinje i bunden (omkring linje 415), efterfulgt af den tilhørende IIFE-generator, der automatisk bygger uge 28 til uge 44 dynamisk. Du har også lagt Firebase-konfigurationen og EmailJS-integrationen ind i filen.
-
-### Hvorfor fejler den samling så for dig?
-
-Problemet i den kode, du har sendt nu, er, at der er opstået en **dobbelt-kodning (nesting)**, som fuldstændig vil ødelægge browserens evne til at læse filen.
-
-Hvis du kigger helt i toppen og helt i bunden af den tekst, du sendte, kan du se, at du har lagt en hel HTML-side *indeni* en anden HTML-side. Der optræder f.eks. `<!DOCTYPE html>`, `<head>`, og `<body>` to gange, og helt i bunden er der efterladt nogle ekstra løse scripts, som ikke hører hjemme der.
-
-### Den helt rene, fejlfrie og samlede version:
-
-Herunder har jeg taget **nøjagtig din kode** (med dine ugedata fra uge 9, din automatiske uge-generator op til uge 44 samt de rettede fraværs-scripts), renset den for de dobbelte tags og samlet det i **én perfekt struktureret fil**.
-
-Du kan kopiere koden nedenfor, indsætte den i et Google Doc (eller en ren tekstfil kaldet `vagtplan.html`), og så vil den køre med det samme uden nogen mangler:
-
-```html
 <!DOCTYPE html>
 <html lang="da">
 <head>
